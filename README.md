@@ -1,7 +1,6 @@
-```markdown
 # Notes App
 
-A full-stack MERN Notes Application built as part of the 10P Shine internship.
+Backend foundation for a MERN Notes Application, built as part of the 10P Shine internship. This project is in early development.
 
 ## Overview
 
@@ -49,7 +48,7 @@ cp .env.example .env
 
 Minimum required variable:
 
-```
+```dotenv
 PORT=5000
 ```
 
