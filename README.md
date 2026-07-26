@@ -1,36 +1,74 @@
 # Notes App
 
-A full-stack MERN Notes Application built as part of the 10P Shine internship.
+Backend for a MERN Notes App, built as part of my 10P Shine internship. Still early on, so a lot of this is bare bones for now.
 
-## Current Progress
+## Where things stand
 
-- ✅ Backend project setup completed
-- ✅ Express.js server configured
-- ✅ Basic routing implemented
-- ✅ Environment configuration added
+- Backend project set up
+- Basic Express server running
+- Basic routing done
+- Env config added, with a `.env.example` for reference
+- Backend tests added (Mocha, Chai, Supertest)
+- Updated `.gitignore` for dev files
+- CodeRabbit set up to auto review PRs on main/develop
+- MySQL hooked up
+- Schema created for users and notes tables
+- User and Note models done (talks to the DB directly)
 
-## Technologies
+## Stack
 
-### Backend
+**Backend**
 - Node.js
 - Express.js
+- MySQL
 
-> Frontend, database, authentication, and other features will be added in future updates.
+**Testing**
+- Mocha
+- Chai
+- Supertest
 
-## Backend Setup
+Auth and frontend aren't in yet, will update this once they're added.
 
-```bash
+## Getting it running
+
+```
 cd backend
 npm install
 npm run dev
 ```
 
-## Current APIs
+Runs on `http://localhost:5000` by default.
 
-### GET /
+Run tests with:
 
-Returns a welcome message.
+```
+npm test
+```
 
-### GET /api/health
+## APIs so far
 
-Returns the server health status.
+| Method | Endpoint      | What it does           |
+| ------ | ------------- | ----------------------- |
+| GET    | `/`           | Welcome message          |
+| GET    | `/api/health` | Server health check      |
+
+**GET /**
+```
+{
+  "message": "Welcome to Notes API"
+}
+```
+
+**GET /api/health**
+```
+{
+  "success": true,
+  "message": "Backend is running."
+}
+```
+
+## What's next
+
+- User authentication
+- Notes CRUD API
+- Frontend
