@@ -4,10 +4,10 @@ A full-stack MERN Notes Application built as part of the 10P Shine internship.
 
 ## Current Progress
 
-- ✅ Backend project setup completed
-- ✅ Express.js server configured
-- ✅ Basic routing implemented
-- ✅ Environment configuration added
+-  Backend project setup completed
+-  Express.js server configured
+-  Basic routing implemented
+-  Environment configuration added
 
 ## Technologies
 
