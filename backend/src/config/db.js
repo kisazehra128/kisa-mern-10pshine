@@ -12,13 +12,18 @@ const pool = mysql.createPool({
   queueLimit: 0
 });
 
+pool.on('error', (err) => {
+  console.error('Unexpected MySQL pool error:', err.message);
+});
+
 async function testConnection() {
   try {
     const connection = await pool.getConnection();
-    console.log('✅ MySQL connected successfully');
+    console.log('MySQL connected successfully');
     connection.release();
   } catch (err) {
-    console.error('❌ MySQL connection failed:', err.message);
+    console.error(' MySQL connection failed:', err.message);
+    throw err;
   }
 }
 
