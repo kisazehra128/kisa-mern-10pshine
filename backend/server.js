@@ -13,12 +13,12 @@ async function startServer() {
     });
 
     server.on('error', (err) => {
-      console.error('❌ Server failed to start:', err.message);
+      console.error(' Server failed to start:', err.message);
       process.exit(1);
     });
 
   } catch (error) {
-    console.error('❌ Failed to start the server:', error.message);
+    console.error(' Failed to start the server:', error.message);
     process.exit(1);
   }
 }
