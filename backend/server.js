@@ -6,9 +6,15 @@ const app = require('./src/app');
 async function startServer() {
   try {
     await testConnection();
+
     const PORT = process.env.PORT || 5000;
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
       console.log(`Server running continuously on port ${PORT}`);
+    });
+
+    server.on('error', (err) => {
+      console.error('❌ Server failed to start:', err.message);
+      process.exit(1);
     });
 
   } catch (error) {
