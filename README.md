@@ -1,6 +1,6 @@
 # Notes App
 
-Backend for a MERN Notes App, built as part of my 10P Shine internship. Still early on, so a lot of this is bare bones for now.
+Notes App backend — built with Node.js, Express, and MySQL. Currently early-stage, backend only.
 
 ## Where things stand
 
@@ -31,9 +31,31 @@ Auth and frontend aren't in yet, will update this once they're added.
 
 ## Getting it running
 
-```
+```bash
 cd backend
 npm install
+```
+
+Copy the example env file and fill in your own values:
+
+```bash
+cp .env.example .env
+```
+
+## Database Setup
+
+The schema doesn't create a database for you — create one that matches the `DB_NAME` in your `.env` first, then run the schema against it.
+
+Either via MySQL Workbench (create a schema named to match your `DB_NAME`, then run `backend/database/schema.sql` as a query), or via the CLI if you have it installed:
+
+```bash
+mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS notes_app;"
+mysql -u root -p notes_app < backend/database/schema.sql
+```
+
+## Running the server
+
+```bash
 npm run dev
 ```
 
@@ -41,7 +63,7 @@ Runs on `http://localhost:5000` by default.
 
 Run tests with:
 
-```
+```bash
 npm test
 ```
 
@@ -53,14 +75,14 @@ npm test
 | GET    | `/api/health` | Server health check      |
 
 **GET /**
-```
+```json
 {
   "message": "Welcome to Notes API"
 }
 ```
 
 **GET /api/health**
-```
+```json
 {
   "success": true,
   "message": "Backend is running."
