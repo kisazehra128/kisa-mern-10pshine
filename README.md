@@ -1,79 +1,78 @@
 # Notes App
 
-Backend foundation for a MERN Notes Application, built as part of the 10P Shine internship. This project is in early development.
+Notes App backend — built with Node.js, Express, and MySQL. Currently early-stage, backend only.
 
-## Overview
+## Where things stand
 
-This repository contains the backend for a Notes application. The project is in early development, with the initial Express server, routing, environment configuration, and testing infrastructure in place. Frontend, database integration, and authentication will be added in subsequent phases.
-
-## Progress
-
-- Backend project setup completed
-- Express.js server configured
-- Basic routing implemented
-- Environment configuration added, with an example `.env` file for reference
+- Backend project set up
+- Basic Express server running
+- Basic routing done
+- Env config added, with a `.env.example` for reference
 - Backend tests added (Mocha, Chai, Supertest)
-- Local ignore rules (`.gitignore`) expanded for development
-- Automated review rules configured for key branches
+- Updated `.gitignore` for dev files
+- CodeRabbit set up to auto review PRs on main/develop
+- MySQL hooked up
+- Schema created for users and notes tables
+- User and Note models done (talks to the DB directly)
 
-## Technology Stack
+## Stack
 
 **Backend**
 - Node.js
 - Express.js
+- MySQL
 
 **Testing**
 - Mocha
 - Chai
 - Supertest
 
-Frontend framework, database, and authentication are not yet integrated and will be documented here once added.
+Auth and frontend aren't in yet, will update this once they're added.
 
-## Getting Started
-
-### Installation
+## Getting it running
 
 ```bash
 cd backend
 npm install
 ```
 
-### Environment Variables
-
-Copy the example environment file and adjust values as needed:
+Copy the example env file and fill in your own values:
 
 ```bash
 cp .env.example .env
 ```
 
-Minimum required variable:
+## Database Setup
 
-```dotenv
-PORT=5000
+The schema doesn't create a database for you — create one that matches the `DB_NAME` in your `.env` first, then run the schema against it.
+
+Either via MySQL Workbench (create a schema named to match your `DB_NAME`, then run `backend/database/schema.sql` as a query), or via the CLI if you have it installed:
+
+```bash
+mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS notes_app;"
+mysql -u root -p notes_app < backend/database/schema.sql
 ```
 
-### Running the Server
+## Running the server
 
 ```bash
 npm run dev
 ```
 
-The server runs on `http://localhost:5000` by default.
+Runs on `http://localhost:5000` by default.
 
-### Running Tests
+Run tests with:
 
 ```bash
 npm test
 ```
 
-## API Endpoints
+## APIs so far
 
-| Method | Endpoint       | Description                   |
-|--------|----------------|--------------------------------|
-| GET    | `/`            | Returns a welcome message      |
-| GET    | `/api/health`  | Returns server health status   |
-
-### Example Responses
+| Method | Endpoint      | What it does           |
+| ------ | ------------- | ----------------------- |
+| GET    | `/`           | Welcome message          |
+| GET    | `/api/health` | Server health check      |
 
 **GET /**
 ```json
@@ -90,10 +89,8 @@ npm test
 }
 ```
 
-## Roadmap
+## What's next
 
-- Database integration
 - User authentication
 - Notes CRUD API
-- Frontend implementation
-```
+- Frontend
