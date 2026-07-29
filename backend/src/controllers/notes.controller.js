@@ -27,9 +27,6 @@ async function createNote(req, res) {
 
 async function getNotes(req, res) {
   try {
-    const notes = await noteModel.findAllByUser(req.user.userId);
-
-    // basic search - filters by title/content if a ?search= query is passed
     const { search } = req.query;
 
     // repeated ?search=x&search=y query keys arrive as an array in Express -
@@ -37,6 +34,8 @@ async function getNotes(req, res) {
     if (search !== undefined && typeof search !== 'string') {
       return res.status(400).json({ message: 'search must be a single value' });
     }
+
+    const notes = await noteModel.findAllByUser(req.user.userId);
 
     const filtered = search
       ? notes.filter(n =>
