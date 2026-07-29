@@ -57,7 +57,7 @@ In `.env`, set `DB_NAME` to whatever you want your database to be called. Then c
 
 ```bash
 mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS notes_app;"
-mysql -u root -p notes_app < backend/database/schema.sql
+mysql -u root -p notes_app < database/schema.sql
 ```
 *(replace `notes_app` in both commands with whatever you set `DB_NAME` to)*
 
@@ -125,6 +125,8 @@ Response:
 }
 ```
 
+Status codes: `201` success · `409` email already registered · `400` missing fields
+
 **POST /api/auth/login**
 
 Body:
@@ -148,6 +150,8 @@ Response:
 }
 ```
 
+Status codes: `200` success · `401` wrong email or password
+
 **GET /api/users/me**
 
 Requires an `Authorization: Bearer <token>` header, using the token from login.
@@ -163,6 +167,8 @@ Response:
   }
 }
 ```
+
+Status codes: `200` success · `401` missing, invalid, or expired token
 
 ## Testing the API manually (Postman)
 

@@ -25,6 +25,11 @@ async function register(req, res) {
     });
 
   } catch (err) {
+    // covers the case where two requests both pass the findByEmail check
+    // above at the same time - the DB's UNIQUE constraint catches it here
+    if (err.code === 'ER_DUP_ENTRY') {
+      return res.status(409).json({ message: 'that email is already registered' });
+    }
     console.error('register failed:', err.message);
     res.status(500).json({ message: 'something went wrong, try again' });
   }
@@ -51,8 +56,10 @@ async function login(req, res) {
       return res.status(401).json({ message: 'invalid email or password' });
     }
 
+    // just the id in here - keeping the token small and not putting
+    // extra personal info in something that gets sent around
     const token = jwt.sign(
-      { userId: user.id, email: user.email },
+      { userId: user.id },
       process.env.JWT_SECRET,
       { expiresIn: '1h' }
     );

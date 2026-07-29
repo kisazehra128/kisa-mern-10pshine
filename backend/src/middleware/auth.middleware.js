@@ -12,7 +12,7 @@ function authenticate(req, res, next) {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; // { userId, email }
+    req.user = decoded; // { userId }
     next();
   } catch (err) {
     // covers both an expired token and a invalid one

@@ -5,6 +5,11 @@ const app = require('./src/app');
 
 async function startServer() {
   try {
+    if (!process.env.JWT_SECRET) {
+      console.error(' JWT_SECRET is missing from .env — server cannot start without it.');
+      process.exit(1);
+    }
+J
     await testConnection();
 
     const port = Number(process.env.PORT);
@@ -20,12 +25,12 @@ async function startServer() {
     });
 
     server.on('error', (err) => {
-      console.error('❌ Server failed to start:', err.message);
+      console.error(' Server failed to start:', err.message);
       process.exit(1);
     });
 
   } catch (error) {
-    console.error('❌ Failed to start the server:', error.message);
+    console.error(' Failed to start the server:', error.message);
     process.exit(1);
   }
 }
