@@ -4,8 +4,12 @@ async function createNote(req, res) {
   try {
     const { title, content } = req.body;
 
-    if (!title) {
+    if (typeof title !== 'string' || !title.trim()) {
       return res.status(400).json({ message: 'title is required' });
+    }
+
+    if (content !== undefined && typeof content !== 'string') {
+      return res.status(400).json({ message: 'content must be text' });
     }
 
     const newNote = await noteModel.create({
@@ -27,6 +31,13 @@ async function getNotes(req, res) {
 
     // basic search - filters by title/content if a ?search= query is passed
     const { search } = req.query;
+
+    // repeated ?search=x&search=y query keys arrive as an array in Express -
+    // reject that instead of letting .toLowerCase() crash the request
+    if (search !== undefined && typeof search !== 'string') {
+      return res.status(400).json({ message: 'search must be a single value' });
+    }
+
     const filtered = search
       ? notes.filter(n =>
           n.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -60,8 +71,12 @@ async function updateNote(req, res) {
   try {
     const { title, content } = req.body;
 
-    if (!title) {
+    if (typeof title !== 'string' || !title.trim()) {
       return res.status(400).json({ message: 'title is required' });
+    }
+
+    if (content !== undefined && typeof content !== 'string') {
+      return res.status(400).json({ message: 'content must be text' });
     }
 
     const updated = await noteModel.update(req.params.id, req.user.userId, { title, content: content || '' });

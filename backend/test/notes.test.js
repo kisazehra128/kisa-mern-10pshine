@@ -87,6 +87,20 @@ describe('Notes routes', () => {
       expect(res.body.notes.some(n => n.title.includes('first'))).to.be.true;
     });
 
+    it('finds a note by content even if the title does not match', async () => {
+      await request(app)
+        .post('/api/notes')
+        .set('Authorization', `Bearer ${tokenA}`)
+        .send({ title: 'Unrelated title', content: 'this one has the word banana in it' });
+
+      const res = await request(app)
+        .get('/api/notes?search=banana')
+        .set('Authorization', `Bearer ${tokenA}`);
+
+      expect(res.status).to.equal(200);
+      expect(res.body.notes.some(n => n.content.includes('banana'))).to.be.true;
+    });
+
     it('does not return userA notes when userB asks', async () => {
       const res = await request(app)
         .get('/api/notes')
@@ -141,6 +155,14 @@ describe('Notes routes', () => {
         .send({ title: 'Updated title', content: 'updated content' });
 
       expect(res.status).to.equal(200);
+
+      // confirm it actually persisted, not just that the endpoint said "ok"
+      const check = await request(app)
+        .get(`/api/notes/${noteId}`)
+        .set('Authorization', `Bearer ${tokenA}`);
+
+      expect(check.body.note.title).to.equal('Updated title');
+      expect(check.body.note.content).to.equal('updated content');
     });
   });
 
