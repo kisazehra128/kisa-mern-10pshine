@@ -1,6 +1,6 @@
 # Notes App
 
-Notes App backend — built with Node.js, Express, and MySQL. Currently early-stage, backend only.
+Backend foundation for a MERN Notes Application, built as part of the 10P Shine internship. This project is in early development.
 
 ## Where things stand
 
@@ -94,3 +94,4 @@ npm test
 - Logging + global error handling
 - Expanded test coverage
 - Frontend
+````
