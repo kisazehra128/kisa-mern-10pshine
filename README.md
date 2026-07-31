@@ -91,6 +91,6 @@ npm test
 
 ## What's next
 
-- User authentication
-- Notes CRUD API
+- Logging + global error handling
+- Expanded test coverage
 - Frontend
