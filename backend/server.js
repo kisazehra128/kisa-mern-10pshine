@@ -9,7 +9,7 @@ async function startServer() {
       console.error(' JWT_SECRET is missing from .env — server cannot start without it.');
       process.exit(1);
     }
-J
+
     await testConnection();
 
     const port = Number(process.env.PORT);
