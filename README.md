@@ -27,7 +27,7 @@ Notes App backend — built with Node.js, Express, and MySQL. Currently early-st
 - Chai
 - Supertest
 
-Auth and frontend aren't in yet, will update this once they're added.
+Frontend isn't in yet, will update this once it's added.
 
 ## Getting it running
 
