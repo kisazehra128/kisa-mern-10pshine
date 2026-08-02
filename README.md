@@ -15,6 +15,7 @@ Backend foundation for a MERN Notes Application, built as part of the 10P Shine 
 - Schema created for users and notes tables
 - User and Note models done (talks to the DB directly)
 - User authentication done — register, login, JWT, protected routes
+- Notes CRUD done — create, read, update, delete, search, scoped per user
 - Postman collection added for manually testing all endpoints
 
 ## Stack
@@ -86,6 +87,11 @@ npm test
 | POST   | `/api/auth/register`  | Create a new user                      | No             |
 | POST   | `/api/auth/login`     | Log in, get back a JWT                 | No             |
 | GET    | `/api/users/me`       | Get the logged-in user's profile       | Yes            |
+| POST   | `/api/notes`          | Create a note                          | Yes            |
+| GET    | `/api/notes`          | Get all of the logged-in user's notes, supports `?search=` | Yes |
+| GET    | `/api/notes/:id`      | Get a single note                      | Yes            |
+| PUT    | `/api/notes/:id`      | Update a note                          | Yes            |
+| DELETE | `/api/notes/:id`      | Delete a note                          | Yes            |
 
 **GET /**
 ```json
@@ -170,6 +176,111 @@ Response:
 
 Status codes: `200` success · `401` missing, invalid, or expired token
 
+**POST /api/notes**
+
+Requires `Authorization: Bearer <token>`.
+
+Body:
+```json
+{
+  "title": "My first note",
+  "content": "some content"
+}
+```
+
+Response:
+```json
+{
+  "message": "note created",
+  "note": {
+    "id": 1,
+    "userId": 1,
+    "title": "My first note",
+    "content": "some content"
+  }
+}
+```
+
+Status codes: `201` success · `400` missing title · `401` missing/invalid token
+
+**GET /api/notes**
+
+Requires `Authorization: Bearer <token>`. Only returns notes belonging to the logged-in user.
+
+Optional query: `?search=keyword` — filters by title or content.
+
+Response:
+```json
+{
+  "notes": [
+    {
+      "id": 1,
+      "user_id": 1,
+      "title": "My first note",
+      "content": "some content",
+      "created_at": "2026-07-28T12:00:00.000Z",
+      "updated_at": "2026-07-28T12:00:00.000Z"
+    }
+  ]
+}
+```
+
+Status codes: `200` success · `401` missing/invalid token
+
+**GET /api/notes/:id**
+
+Requires `Authorization: Bearer <token>`. Only works if the note belongs to the logged-in user.
+
+Response:
+```json
+{
+  "note": {
+    "id": 1,
+    "user_id": 1,
+    "title": "My first note",
+    "content": "some content",
+    "created_at": "2026-07-28T12:00:00.000Z",
+    "updated_at": "2026-07-28T12:00:00.000Z"
+  }
+}
+```
+
+Status codes: `200` success · `404` not found, or not yours · `401` missing/invalid token
+
+**PUT /api/notes/:id**
+
+Requires `Authorization: Bearer <token>`. Only works if the note belongs to the logged-in user.
+
+Body:
+```json
+{
+  "title": "Updated title",
+  "content": "updated content"
+}
+```
+
+Response:
+```json
+{
+  "message": "note updated"
+}
+```
+
+Status codes: `200` success · `400` missing title · `404` not found, or not yours · `401` missing/invalid token
+
+**DELETE /api/notes/:id**
+
+Requires `Authorization: Bearer <token>`. Only works if the note belongs to the logged-in user.
+
+Response:
+```json
+{
+  "message": "note deleted"
+}
+```
+
+Status codes: `200` success · `404` not found, or not yours · `401` missing/invalid token
+
 ## Testing the API manually (Postman)
 
 All endpoints above were manually verified with Postman against the running local server, alongside the automated Mocha/Chai/Supertest suite.
@@ -182,7 +293,7 @@ To use them:
 1. Import both files into Postman (`File > Import`)
 2. Select `Notes App - Local` from the environment dropdown
 3. Start the server with `npm run dev`
-4. Run the requests in order: Welcome → Health Check → Register → Login → Get Current User
+4. Run the requests in order: Welcome → Health Check → Register → Login → Get Current User → notes endpoints
 
 ## What's next
 
