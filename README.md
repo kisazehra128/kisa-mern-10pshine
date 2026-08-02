@@ -194,7 +194,7 @@ Response:
   "message": "note created",
   "note": {
     "id": 1,
-    "userId": 1,
+    "user_id": 1,
     "title": "My first note",
     "content": "some content"
   }
@@ -297,6 +297,5 @@ To use them:
 
 ## What's next
 
-- Logging + global error handling
-- Expanded test coverage
-- Frontend
+backend logging-testing
+Frontend
