@@ -58,7 +58,7 @@ In `.env`, set `DB_NAME` to whatever you want your database to be called. Then c
 
 ```bash
 mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS notes_app;"
-mysql -u root -p notes_app < database/schema.sql
+mysql -u root -p notes_app < backend/database/schema.sql
 ```
 *(replace `notes_app` in both commands with whatever you set `DB_NAME` to)*
 
@@ -225,7 +225,7 @@ Response:
 }
 ```
 
-Status codes: `200` success · `401` missing/invalid token
+Status codes: `200` success · `400` search must be a single value · `401` missing/invalid token
 
 **GET /api/notes/:id**
 
@@ -297,5 +297,5 @@ To use them:
 
 ## What's next
 
-backend logging-testing
-Frontend
+- Backend logging and testing
+- Frontend
