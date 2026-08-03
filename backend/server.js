@@ -6,7 +6,7 @@ const app = require('./src/app');
 async function startServer() {
   try {
     if (!process.env.JWT_SECRET) {
-      console.error(' JWT_SECRET is missing from .env — server cannot start without it.');
+      console.error('JWT_SECRET is missing from .env — server cannot start without it.');
       process.exit(1);
     }
 
