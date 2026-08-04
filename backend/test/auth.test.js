@@ -89,4 +89,27 @@ describe('Auth routes', () => {
       expect(res.body.user).to.not.have.property('password');
     });
   });
+
+  describe('POST /api/auth/logout', () => {
+    it('rejects with no token', async () => {
+      const res = await request(app).post('/api/auth/logout');
+      expect(res.status).to.equal(401);
+    });
+
+    it('logs out with a valid token, and that same token is rejected afterward', async () => {
+      const logoutRes = await request(app)
+        .post('/api/auth/logout')
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(logoutRes.status).to.equal(200);
+      expect(logoutRes.body).to.have.property('message', 'logged out');
+
+      // same token, now blacklisted - should no longer work on a protected route
+      const meRes = await request(app)
+        .get('/api/users/me')
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(meRes.status).to.equal(401);
+    });
+  });
 });
