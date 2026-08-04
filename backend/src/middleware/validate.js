@@ -13,7 +13,11 @@ function validate(schema, property = 'body') {
       return next(new AppError(error.details[0].message, 400));
     }
 
-    req[property] = value;
+    if (property === 'query') {
+      req.validatedQuery = value;
+    } else {
+      req[property] = value;
+    }
     next();
   };
 }

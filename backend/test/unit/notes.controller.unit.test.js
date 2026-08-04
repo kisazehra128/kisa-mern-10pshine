@@ -52,7 +52,7 @@ describe('notes.controller (unit, mocked noteModel)', () => {
         { id: 2, title: 'B', content: 'y' },
       ]);
 
-      const req = { user: { userId: 1 }, query: {} };
+      const req = { user: { userId: 1 }, validatedQuery: {} };
       const res = makeRes();
       const next = sinon.spy();
 
@@ -67,7 +67,7 @@ describe('notes.controller (unit, mocked noteModel)', () => {
         { id: 2, title: 'Random', content: 'nothing relevant here' },
       ]);
 
-      const req = { user: { userId: 1 }, query: { search: 'milk' } };
+      const req = { user: { userId: 1 }, validatedQuery: { search: 'milk' } };
       const res = makeRes();
       const next = sinon.spy();
 

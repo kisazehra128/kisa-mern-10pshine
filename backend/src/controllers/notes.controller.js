@@ -18,8 +18,7 @@ const createNote = asyncHandler(async (req, res) => {
 });
 
 const getNotes = asyncHandler(async (req, res) => {
-  const { search } = req.query;
-
+const { search } = req.validatedQuery;
   const notes = await noteModel.findAllByUser(req.user.userId);
 
   const filtered = search

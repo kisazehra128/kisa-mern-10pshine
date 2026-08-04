@@ -21,8 +21,8 @@ function errorHandler(err, req, res, next) {
     logger.error({ err }, 'Unexpected error');
   }
 
-  res.status(statusCode).json({
-    message: statusCode === 500 ? 'something went wrong, try again' : err.message,
+ res.status(statusCode).json({
+    message: err.isOperational ? err.message : 'something went wrong, try again',
   });
 }
 

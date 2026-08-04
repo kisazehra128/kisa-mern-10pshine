@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const userModel = require('../models/userModel');
@@ -56,7 +57,7 @@ const login = asyncHandler(async (req, res) => {
   const token = jwt.sign(
     { userId: user.id },
     process.env.JWT_SECRET,
-    { expiresIn: '1h' }
+    { expiresIn: '1h', jwtid: crypto.randomUUID() }
   );
 
   logger.info({ userId: user.id }, 'user logged in');

@@ -1,6 +1,6 @@
 # Notes App
 
-Backend for a MERN Notes Application. Early development.
+Backend for a Node.js, Express, and MySQL Notes Application. Early development.
 
 ## Stack
 
@@ -36,10 +36,10 @@ Create the database and apply the schema (name must match `DB_NAME`):
 
 ```bash
 mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS notes_app;"
-mysql -u root -p notes_app < backend/database/schema.sql
+mysql -u root -p notes_app < database/schema.sql
 ```
 
-Or run `backend/database/schema.sql` in MySQL Workbench.
+Or run 'database/schema.sql` in MySQL Workbench.
 
 > No separate test database yet — tests run against the same DB and clean up their own data in an `after()` hook.
 
