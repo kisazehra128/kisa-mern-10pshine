@@ -1,21 +1,27 @@
 const express = require('express');
 const router = express.Router();
 const authenticate = require('../middleware/auth.middleware');
+const validate = require('../middleware/validate');
+const {
+  createNoteSchema,
+  updateNoteSchema,
+  searchQuerySchema,
+} = require('../validation/schemas');
 const {
   createNote,
   getNotes,
   getNoteById,
   updateNote,
-  deleteNote
+  deleteNote,
 } = require('../controllers/notes.controller');
 
 // every note route needs a valid token - nobody's notes without logging in
 router.use(authenticate);
 
-router.post('/', createNote);
-router.get('/', getNotes);
+router.post('/', validate(createNoteSchema), createNote);
+router.get('/', validate(searchQuerySchema, 'query'), getNotes);
 router.get('/:id', getNoteById);
-router.put('/:id', updateNote);
+router.put('/:id', validate(updateNoteSchema), updateNote);
 router.delete('/:id', deleteNote);
 
 module.exports = router;

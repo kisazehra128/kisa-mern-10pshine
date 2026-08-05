@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const tokenBlacklist = require('../utils/tokenBlacklist');
 
 function authenticate(req, res, next) {
   const authHeader = req.headers.authorization;
@@ -9,6 +10,12 @@ function authenticate(req, res, next) {
   }
 
   const token = authHeader.split(' ')[1];
+
+  // rejects tokens that were explicitly logged out, even if they haven't
+  // technically expired yet
+  if (tokenBlacklist.isBlacklisted(token)) {
+    return res.status(401).json({ message: 'invalid or expired token' });
+  }
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);

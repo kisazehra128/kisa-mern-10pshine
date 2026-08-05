@@ -1,301 +1,114 @@
 # Notes App
 
-Backend foundation for a MERN Notes Application, built as part of the 10P Shine internship. This project is in early development.
-
-## Where things stand
-
-- Backend project set up
-- Basic Express server running
-- Basic routing done
-- Env config added, with a `.env.example` for reference
-- Backend tests added (Mocha, Chai, Supertest)
-- Updated `.gitignore` for dev files
-- CodeRabbit set up to auto review PRs on main/develop
-- MySQL hooked up
-- Schema created for users and notes tables
-- User and Note models done (talks to the DB directly)
-- User authentication done — register, login, JWT, protected routes
-- Notes CRUD done — create, read, update, delete, search, scoped per user
-- Postman collection added for manually testing all endpoints
+Backend for a Node.js, Express, and MySQL Notes Application. Early development.
 
 ## Stack
 
-**Backend**
-- Node.js
-- Express.js
-- MySQL
+**Backend:** Node.js, Express, MySQL
+**Auth:** bcrypt, JWT
+**Validation:** Joi
+**Logging:** Pino (`pino`, `pino-http`, `pino-pretty`)
+**Testing:** Mocha, Chai, Supertest, Sinon, Proxyquire, Postman
 
-**Auth**
-- bcrypt (password hashing)
-- jsonwebtoken (JWT)
+## Where things stand
 
-**Testing**
-- Mocha
-- Chai
-- Supertest
-- Postman (manual API testing)
+- Express server, routing, env config, `.gitignore`, CodeRabbit on PRs
+- MySQL connected — schema, User model, Note model
+- Auth done — register, login, logout, JWT, protected routes
+- Notes CRUD done — create/read/update/delete, search, scoped per user
+- Structured logging (Pino) — every request logged, `Authorization` header redacted
+- Centralized error handling — consistent JSON errors, no leaked stack traces
+- Joi request validation — bad input rejected with `400` before hitting the DB
+- 61 automated tests: integration tests (real Express app + real MySQL, self-cleaning) and unit tests (Sinon/Proxyquire-mocked DB layer)
+- Postman collection for manual testing
 
-Frontend isn't in yet, will update this once it's added.
+Frontend not started yet.
 
-## Getting it running
+## Setup
 
 ```bash
 cd backend
 npm install
+cp .env.example .env   # fill in DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, JWT_SECRET
 ```
 
-## Environment Setup
-
-```bash
-cp .env.example .env
-```
-
-Fill in the values in `.env`, including a secure random string for `JWT_SECRET`.
-
-## Database Setup
-
-In `.env`, set `DB_NAME` to whatever you want your database to be called. Then create a database with that same name and apply the schema:
+Create the database and apply the schema (name must match `DB_NAME`):
 
 ```bash
 mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS notes_app;"
-mysql -u root -p notes_app < backend/database/schema.sql
+mysql -u root -p notes_app < database/schema.sql
 ```
-*(replace `notes_app` in both commands with whatever you set `DB_NAME` to)*
 
-Alternatively, run `backend/database/schema.sql` in MySQL Workbench against a database named to match `DB_NAME`.
+Or run 'database/schema.sql` in MySQL Workbench.
 
-## Running the server
+> No separate test database yet — tests run against the same DB and clean up their own data in an `after()` hook.
+
+## Running
 
 ```bash
-npm run dev
+npm run dev     # http://localhost:5000
+npm test        # 61 tests — see .mocharc.json for config
 ```
 
-Runs on `http://localhost:5000` by default.
+## API Reference
 
-Run tests with:
+All `/api/notes` and `/api/users/me` routes require `Authorization: Bearer <token>`.
 
-```bash
-npm test
-```
+| Method | Endpoint | Description | Status codes |
+| ------ | -------- | ------------ | ------------- |
+| GET | `/` | Welcome message | 200 |
+| GET | `/api/health` | Health check | 200 |
+| POST | `/api/auth/register` | Create user — `{ name, email, password }` | 201 · 409 dup email · 400 invalid |
+| POST | `/api/auth/login` | Log in — `{ email, password }` → returns `token` | 200 · 401 bad credentials |
+| POST | `/api/auth/logout` | Blacklists current token | 200 · 401 |
+| GET | `/api/users/me` | Current user's profile | 200 · 401 |
+| POST | `/api/notes` | Create note — `{ title, content }` | 201 · 400 invalid title · 401 |
+| GET | `/api/notes` | List user's notes, optional `?search=` | 200 · 400 bad search · 401 |
+| GET | `/api/notes/:id` | Get one note | 200 · 404 · 401 |
+| PUT | `/api/notes/:id` | Update note — `{ title, content }` | 200 · 400 · 404 · 401 |
+| DELETE | `/api/notes/:id` | Delete note | 200 · 404 · 401 |
 
-## APIs so far
+Notes are always scoped to the logged-in user — trying to access another user's note returns `404`, not `403`.
 
-| Method | Endpoint             | What it does                          | Auth required |
-| ------ | -------------------- | -------------------------------------- | -------------- |
-| GET    | `/`                   | Welcome message                        | No             |
-| GET    | `/api/health`         | Server health check                    | No             |
-| POST   | `/api/auth/register`  | Create a new user                      | No             |
-| POST   | `/api/auth/login`     | Log in, get back a JWT                 | No             |
-| GET    | `/api/users/me`       | Get the logged-in user's profile       | Yes            |
-| POST   | `/api/notes`          | Create a note                          | Yes            |
-| GET    | `/api/notes`          | Get all of the logged-in user's notes, supports `?search=` | Yes |
-| GET    | `/api/notes/:id`      | Get a single note                      | Yes            |
-| PUT    | `/api/notes/:id`      | Update a note                          | Yes            |
-| DELETE | `/api/notes/:id`      | Delete a note                          | Yes            |
+### Example: register / login
 
-**GET /**
-```json
-{
-  "message": "Welcome to Notes API"
-}
-```
-
-**GET /api/health**
-```json
-{
-  "success": true,
-  "message": "Backend is running."
-}
-```
-
-**POST /api/auth/register**
-
-Body:
-```json
-{
-  "name": "Test User",
-  "email": "test@example.com",
-  "password": "password123"
-}
-```
-
-Response:
+**POST /api/auth/register** → `201`
 ```json
 {
   "message": "user registered",
-  "user": {
-    "id": 1,
-    "name": "Test User",
-    "email": "test@example.com"
-  }
+  "user": { "id": 1, "name": "Test User", "email": "test@example.com" }
 }
 ```
 
-Status codes: `201` success · `409` email already registered · `400` missing fields
-
-**POST /api/auth/login**
-
-Body:
-```json
-{
-  "email": "test@example.com",
-  "password": "password123"
-}
-```
-
-Response:
+**POST /api/auth/login** → `200`
 ```json
 {
   "message": "logged in",
   "token": "eyJhbGciOi...",
-  "user": {
-    "id": 1,
-    "name": "Test User",
-    "email": "test@example.com"
-  }
+  "user": { "id": 1, "name": "Test User", "email": "test@example.com" }
 }
 ```
 
-Status codes: `200` success · `401` wrong email or password
+### Example: a note
 
-**GET /api/users/me**
-
-Requires an `Authorization: Bearer <token>` header, using the token from login.
-
-Response:
 ```json
 {
-  "user": {
-    "id": 1,
-    "name": "Test User",
-    "email": "test@example.com",
-    "created_at": "2026-07-28T12:00:00.000Z"
-  }
-}
-```
-
-Status codes: `200` success · `401` missing, invalid, or expired token
-
-**POST /api/notes**
-
-Requires `Authorization: Bearer <token>`.
-
-Body:
-```json
-{
+  "id": 1,
+  "user_id": 1,
   "title": "My first note",
-  "content": "some content"
+  "content": "some content",
+  "created_at": "2026-07-28T12:00:00.000Z",
+  "updated_at": "2026-07-28T12:00:00.000Z"
 }
 ```
+`POST /api/notes` returns this wrapped as `{ "message": "note created", "note": {...} }`. `GET /api/notes` returns `{ "notes": [...] }`. `GET /api/notes/:id` returns `{ "note": {...} }`.
 
-Response:
-```json
-{
-  "message": "note created",
-  "note": {
-    "id": 1,
-    "user_id": 1,
-    "title": "My first note",
-    "content": "some content"
-  }
-}
-```
+Full request/response bodies for every endpoint are in the Postman collection.
 
-Status codes: `201` success · `400` missing title · `401` missing/invalid token
+## Postman
 
-**GET /api/notes**
-
-Requires `Authorization: Bearer <token>`. Only returns notes belonging to the logged-in user.
-
-Optional query: `?search=keyword` — filters by title or content.
-
-Response:
-```json
-{
-  "notes": [
-    {
-      "id": 1,
-      "user_id": 1,
-      "title": "My first note",
-      "content": "some content",
-      "created_at": "2026-07-28T12:00:00.000Z",
-      "updated_at": "2026-07-28T12:00:00.000Z"
-    }
-  ]
-}
-```
-
-Status codes: `200` success · `400` search must be a single value · `401` missing/invalid token
-
-**GET /api/notes/:id**
-
-Requires `Authorization: Bearer <token>`. Only works if the note belongs to the logged-in user.
-
-Response:
-```json
-{
-  "note": {
-    "id": 1,
-    "user_id": 1,
-    "title": "My first note",
-    "content": "some content",
-    "created_at": "2026-07-28T12:00:00.000Z",
-    "updated_at": "2026-07-28T12:00:00.000Z"
-  }
-}
-```
-
-Status codes: `200` success · `404` not found, or not yours · `401` missing/invalid token
-
-**PUT /api/notes/:id**
-
-Requires `Authorization: Bearer <token>`. Only works if the note belongs to the logged-in user.
-
-Body:
-```json
-{
-  "title": "Updated title",
-  "content": "updated content"
-}
-```
-
-Response:
-```json
-{
-  "message": "note updated"
-}
-```
-
-Status codes: `200` success · `400` missing title · `404` not found, or not yours · `401` missing/invalid token
-
-**DELETE /api/notes/:id**
-
-Requires `Authorization: Bearer <token>`. Only works if the note belongs to the logged-in user.
-
-Response:
-```json
-{
-  "message": "note deleted"
-}
-```
-
-Status codes: `200` success · `404` not found, or not yours · `401` missing/invalid token
-
-## Testing the API manually (Postman)
-
-All endpoints above were manually verified with Postman against the running local server, alongside the automated Mocha/Chai/Supertest suite.
-
-Collection and environment files are in `postman/`:
-- `Notes-App.postman_collection.json` — one request per endpoint
-- `Notes-App-Local.postman_environment.json` — sets `baseUrl` to `http://localhost:5000`
-
-To use them:
-1. Import both files into Postman (`File > Import`)
-2. Select `Notes App - Local` from the environment dropdown
-3. Start the server with `npm run dev`
-4. Run the requests in order: Welcome → Health Check → Register → Login → Get Current User → notes endpoints
+Files in `postman/`: `Notes-App.postman_collection.json` + `Notes-App-Local.postman_environment.json` (sets `baseUrl` to `localhost:5000`). Import both, select the environment, start the server, run requests in order.
 
 ## What's next
 
-- Backend logging and testing
-- Frontend
+- Frontend: React setup, auth pages, notes dashboard (will need CORS enabled on the backend)

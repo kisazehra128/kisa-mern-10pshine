@@ -1,111 +1,75 @@
 const noteModel = require('../models/noteModel');
+const AppError = require('../utils/AppError');
+const asyncHandler = require('../utils/asyncHandler');
+const logger = require('../config/logger');
 
-async function createNote(req, res) {
-  try {
-    const { title, content } = req.body;
+const createNote = asyncHandler(async (req, res) => {
+  const { title, content } = req.body;
 
-    if (typeof title !== 'string' || !title.trim()) {
-      return res.status(400).json({ message: 'title is required' });
-    }
+  const newNote = await noteModel.create({
+    userId: req.user.userId,
+    title,
+    content: content || '',
+  });
 
-    if (content !== undefined && typeof content !== 'string') {
-      return res.status(400).json({ message: 'content must be text' });
-    }
+  logger.info({ userId: req.user.userId, noteId: newNote.id }, 'note created');
 
-    const newNote = await noteModel.create({
-      userId: req.user.userId,
-      title,
-      content: content || ''
-    });
+  res.status(201).json({ message: 'note created', note: newNote });
+});
 
-    res.status(201).json({ message: 'note created', note: newNote });
-  } catch (err) {
-    console.error('createNote failed:', err.message);
-    res.status(500).json({ message: 'something went wrong creating the note' });
+const getNotes = asyncHandler(async (req, res) => {
+const { search } = req.validatedQuery;
+  const notes = await noteModel.findAllByUser(req.user.userId);
+
+  const filtered = search
+    ? notes.filter(n =>
+        n.title.toLowerCase().includes(search.toLowerCase()) ||
+        (n.content && n.content.toLowerCase().includes(search.toLowerCase()))
+      )
+    : notes;
+
+  res.status(200).json({ notes: filtered });
+});
+
+const getNoteById = asyncHandler(async (req, res) => {
+  const note = await noteModel.findById(req.params.id, req.user.userId);
+
+  if (!note) {
+    throw new AppError('note not found', 404);
   }
-}
 
-async function getNotes(req, res) {
-  try {
-    const { search } = req.query;
+  res.status(200).json({ note });
+});
 
-    // repeated ?search=x&search=y query keys arrive as an array in Express -
-    // reject that instead of letting .toLowerCase() crash the request
-    if (search !== undefined && typeof search !== 'string') {
-      return res.status(400).json({ message: 'search must be a single value' });
-    }
+const updateNote = asyncHandler(async (req, res) => {
+  const { title, content } = req.body;
 
-    const notes = await noteModel.findAllByUser(req.user.userId);
+  const updated = await noteModel.update(req.params.id, req.user.userId, {
+    title,
+    content: content || '',
+  });
 
-    const filtered = search
-      ? notes.filter(n =>
-          n.title.toLowerCase().includes(search.toLowerCase()) ||
-          (n.content && n.content.toLowerCase().includes(search.toLowerCase()))
-        )
-      : notes;
-
-    res.status(200).json({ notes: filtered });
-  } catch (err) {
-    console.error('getNotes failed:', err.message);
-    res.status(500).json({ message: 'something went wrong fetching notes' });
+  if (!updated) {
+    // either the note doesn't exist, or it belongs to someone else -
+    // keeping the message the same either way so we don't leak which
+    throw new AppError('note not found', 404);
   }
-}
 
-async function getNoteById(req, res) {
-  try {
-    const note = await noteModel.findById(req.params.id, req.user.userId);
+  logger.info({ userId: req.user.userId, noteId: req.params.id }, 'note updated');
 
-    if (!note) {
-      return res.status(404).json({ message: 'note not found' });
-    }
+  res.status(200).json({ message: 'note updated' });
+});
 
-    res.status(200).json({ note });
-  } catch (err) {
-    console.error('getNoteById failed:', err.message);
-    res.status(500).json({ message: 'something went wrong fetching the note' });
+const deleteNote = asyncHandler(async (req, res) => {
+  const deleted = await noteModel.delete(req.params.id, req.user.userId);
+
+  if (!deleted) {
+    throw new AppError('note not found', 404);
   }
-}
 
-async function updateNote(req, res) {
-  try {
-    const { title, content } = req.body;
+  logger.info({ userId: req.user.userId, noteId: req.params.id }, 'note deleted');
 
-    if (typeof title !== 'string' || !title.trim()) {
-      return res.status(400).json({ message: 'title is required' });
-    }
-
-    if (content !== undefined && typeof content !== 'string') {
-      return res.status(400).json({ message: 'content must be text' });
-    }
-
-    const updated = await noteModel.update(req.params.id, req.user.userId, { title, content: content || '' });
-
-    if (!updated) {
-      // either the note doesn't exist, or it belongs to someone else -
-      // keeping the message the same either way so we don't leak which
-      return res.status(404).json({ message: 'note not found' });
-    }
-
-    res.status(200).json({ message: 'note updated' });
-  } catch (err) {
-    console.error('updateNote failed:', err.message);
-    res.status(500).json({ message: 'something went wrong updating the note' });
-  }
-}
-
-async function deleteNote(req, res) {
-  try {
-    const deleted = await noteModel.delete(req.params.id, req.user.userId);
-
-    if (!deleted) {
-      return res.status(404).json({ message: 'note not found' });
-    }
-
-    res.status(200).json({ message: 'note deleted' });
-  } catch (err) {
-    console.error('deleteNote failed:', err.message);
-    res.status(500).json({ message: 'something went wrong deleting the note' });
-  }
-}
+  res.status(200).json({ message: 'note deleted' });
+});
 
 module.exports = { createNote, getNotes, getNoteById, updateNote, deleteNote };

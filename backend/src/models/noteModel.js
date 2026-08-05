@@ -1,4 +1,5 @@
 const { pool } = require('../config/db');
+const logger = require('../config/logger');
 
 const NoteModel = {
   async create({ userId, title, content }) {
@@ -9,7 +10,7 @@ const NoteModel = {
       );
       return { id: result.insertId, userId, title, content };
     } catch (err) {
-      console.error('NoteModel.create failed:', err.message);
+      logger.error({ err }, 'NoteModel.create failed');
       throw err;
     }
   },
@@ -23,7 +24,7 @@ const NoteModel = {
       );
       return rows;
     } catch (err) {
-      console.error('NoteModel.findAllByUser failed:', err.message);
+      logger.error({ err }, 'NoteModel.findAllByUser failed');
       throw err;
     }
   },
@@ -38,7 +39,7 @@ const NoteModel = {
       );
       return rows[0]; // will be undefined if it's not theirs
     } catch (err) {
-      console.error('NoteModel.findById failed:', err.message);
+      logger.error({ err }, 'NoteModel.findById failed');
       throw err;
     }
   },
@@ -51,7 +52,7 @@ const NoteModel = {
       );
       return result.affectedRows > 0;
     } catch (err) {
-      console.error('NoteModel.update failed:', err.message);
+      logger.error({ err }, 'NoteModel.update failed');
       throw err;
     }
   },
@@ -65,7 +66,7 @@ const NoteModel = {
       );
       return result.affectedRows > 0;
     } catch (err) {
-      console.error('NoteModel.delete failed:', err.message);
+      logger.error({ err }, 'NoteModel.delete failed');
       throw err;
     }
   }

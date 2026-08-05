@@ -1,4 +1,5 @@
 const { pool } = require('../config/db');
+const logger = require('../config/logger');
 
 const UserModel = {
   // password should already be hashed by the time it gets here 
@@ -10,7 +11,7 @@ const UserModel = {
       );
       return { id: result.insertId, name, email }; // not sending the hash back 
     } catch (err) {
-      console.error('UserModel.create failed:', err.message);
+      logger.error({ err }, 'UserModel.create failed');
       throw err;
     }
   },
@@ -25,7 +26,7 @@ const UserModel = {
       );
       return rows[0];
     } catch (err) {
-      console.error('UserModel.findByEmail failed:', err.message);
+      logger.error({ err }, 'UserModel.findByEmail failed');
       throw err;
     }
   },
@@ -39,7 +40,7 @@ const UserModel = {
       );
       return rows[0];
     } catch (err) {
-      console.error('UserModel.findById failed:', err.message);
+      logger.error({ err }, 'UserModel.findById failed');
       throw err;
     }
   }

@@ -1,5 +1,6 @@
 const mysql = require('mysql2/promise');
 require('dotenv').config();
+const logger = require('./logger');
 
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
@@ -13,16 +14,16 @@ const pool = mysql.createPool({
 });
 
 pool.on('error', (err) => {
-  console.error('Unexpected MySQL pool error:', err.message);
+  logger.error({ err }, 'Unexpected MySQL pool error');
 });
 
 async function testConnection() {
   try {
     const connection = await pool.getConnection();
-    console.log('MySQL connected successfully');
+    logger.info('MySQL connected successfully');
     connection.release();
   } catch (err) {
-    console.error(' MySQL connection failed:', err.message);
+    logger.error({ err }, 'MySQL connection failed');
     throw err;
   }
 }
