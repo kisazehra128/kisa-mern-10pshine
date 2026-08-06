@@ -1,0 +1,128 @@
+@import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Nunito:wght@400;600;700;800&display=swap');
+
+:root {
+  --paper: #efe4d3;
+  --board: #d9c7a8;
+  --board-dark: #3a2e22;
+  --ink: #3a2e22;
+  --ink-soft: #6b5c48;
+  --accent: #c65b4e;
+  --accent-dark: #a8473c;
+  --sticky-yellow: #f3d17a;
+  --sticky-pink: #f0a9a4;
+  --sticky-green: #b7cfa5;
+  --sticky-blue: #aac3d6;
+  --sticky-purple: #cbb3d9;
+  --sticky-cream: #f2ead8;
+  --radius: 14px;
+  --shadow: 0 6px 16px rgba(58, 46, 34, 0.18);
+  --focus-ring: 0 0 0 3px rgba(198, 91, 78, 0.45);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: 'Nunito', system-ui, sans-serif;
+  color: var(--ink);
+  background: var(--paper);
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(58, 46, 34, 0.06) 1px, transparent 0);
+  background-size: 22px 22px;
+}
+
+h1, h2, h3 {
+  font-family: 'Patrick Hand', cursive;
+  font-weight: 400;
+  margin: 0;
+}
+
+button {
+  font-family: inherit;
+}
+
+a {
+  color: inherit;
+}
+
+button:focus-visible,
+input:focus-visible,
+a:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.btn {
+  border: none;
+  border-radius: 999px;
+  padding: 0.7rem 1.4rem;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff8ef;
+  box-shadow: 0 4px 0 var(--accent-dark);
+}
+
+.btn-primary:hover {
+  filter: brightness(1.04);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--ink);
+  border: 2px solid var(--ink);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 1.1rem;
+  text-align: left;
+}
+
+.field label {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+.field input {
+  border: 2px solid #d8c6a8;
+  background: #fffcf6;
+  border-radius: 10px;
+  padding: 0.65rem 0.85rem;
+  font-size: 1rem;
+  color: var(--ink);
+}
+
+.field input::placeholder {
+  color: #b6a688;
+}
+
+.error-banner {
+  background: #f7dede;
+  border: 1px solid #d98f8f;
+  color: #7a2b24;
+  padding: 0.6rem 0.85rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}

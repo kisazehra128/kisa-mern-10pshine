@@ -1,0 +1,219 @@
+.dash {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.dash-topbar {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  padding: 1rem 1.5rem;
+  background: var(--board);
+  border-bottom: 3px solid var(--board-dark);
+}
+
+.dash-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 1.4rem;
+  white-space: nowrap;
+}
+
+.dash-search {
+  flex: 1;
+  max-width: 480px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #fffcf6;
+  border: 2px solid #d8c6a8;
+  border-radius: 999px;
+  padding: 0.5rem 1rem;
+}
+
+.dash-search input {
+  border: none;
+  background: transparent;
+  flex: 1;
+  font-size: 0.95rem;
+  outline: none;
+  color: var(--ink);
+}
+
+.dash-user {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  font-size: 0.9rem;
+}
+
+.dash-user-name {
+  font-weight: 700;
+}
+
+.dash-body {
+  flex: 1;
+  display: flex;
+}
+
+.dash-sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  background: var(--board-dark);
+  color: #f0e6d2;
+  padding: 1.5rem 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+}
+
+.dash-sidebar-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.55rem 0.7rem;
+  border-radius: 10px;
+  font-size: 0.95rem;
+}
+
+.dash-sidebar-item.active {
+  background: rgba(240, 230, 210, 0.14);
+  font-weight: 700;
+}
+
+.dash-sidebar-item .count {
+  background: rgba(240, 230, 210, 0.16);
+  border-radius: 999px;
+  padding: 0.05rem 0.55rem;
+  font-size: 0.78rem;
+}
+
+.dash-sidebar-heading {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.72rem;
+  color: #c9bc9d;
+  margin-bottom: 0.4rem;
+}
+
+.dash-sidebar-note {
+  margin-top: auto;
+  background: rgba(240, 230, 210, 0.08);
+  border: 1px dashed rgba(240, 230, 210, 0.35);
+  border-radius: 10px;
+  padding: 0.9rem;
+  font-family: 'Patrick Hand', cursive;
+  font-size: 1rem;
+  line-height: 1.35;
+}
+
+.dash-main {
+  flex: 1;
+  padding: 2rem;
+}
+
+.dash-main-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 1.6rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.dash-main-title {
+  font-size: 2.1rem;
+}
+
+.dash-main-sub {
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  margin-top: 0.25rem;
+}
+
+.note-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 1.4rem;
+}
+
+.note-card {
+  position: relative;
+  border-radius: 3px;
+  padding: 1.1rem 1.1rem 1.4rem;
+  min-height: 170px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+}
+
+.note-card:nth-child(6n + 1) { background: var(--sticky-yellow); transform: rotate(-1.2deg); }
+.note-card:nth-child(6n + 2) { background: var(--sticky-pink); transform: rotate(0.8deg); }
+.note-card:nth-child(6n + 3) { background: var(--sticky-green); transform: rotate(-0.6deg); }
+.note-card:nth-child(6n + 4) { background: var(--sticky-blue); transform: rotate(1deg); }
+.note-card:nth-child(6n + 5) { background: var(--sticky-purple); transform: rotate(-0.9deg); }
+.note-card:nth-child(6n + 6) { background: var(--sticky-cream); transform: rotate(0.5deg); }
+
+.note-card-title {
+  font-family: 'Patrick Hand', cursive;
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+  word-break: break-word;
+}
+
+.note-card-preview {
+  font-size: 0.88rem;
+  color: #4a3d2c;
+  line-height: 1.4;
+  flex: 1;
+  overflow: hidden;
+ display: -webkit-box;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
+  -webkit-box-orient: vertical;
+}
+
+.note-card-date {
+  font-size: 0.75rem;
+  color: #5c4d38;
+  margin-top: 0.8rem;
+  opacity: 0.75;
+}
+
+.dash-state {
+  text-align: center;
+  padding: 4rem 1rem;
+  color: var(--ink-soft);
+}
+
+.dash-state h3 {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+  color: var(--ink);
+}
+
+.toast {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--board-dark);
+  color: #f0e6d2;
+  padding: 0.7rem 1.2rem;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  box-shadow: var(--shadow);
+  z-index: 50;
+}
+
+@media (max-width: 720px) {
+  .dash-sidebar {
+    display: none;
+  }
+  .dash-search {
+    max-width: none;
+  }
+}
