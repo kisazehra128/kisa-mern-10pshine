@@ -2,12 +2,14 @@ import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import client from '../api/client';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import Sidebar from '../components/Sidebar';
 import NoteCard from '../components/NoteCard';
 import '../styles/dashboard.css';
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
   const [notes, setNotes] = useState([]);
@@ -60,12 +62,10 @@ export default function Dashboard() {
     <div className="dash">
       <header className="dash-topbar">
         <div className="dash-logo">
-          <span>📝</span>
-          <strong>NotePad</strong>
+<img src="/icons/book.png" className="auth-brand-emoji pixel-icon" width="60" height="60" alt="" />          <strong>Note<span className="dash-logo-accent">Pad</span></strong>
         </div>
         <div className="dash-search">
-          <span>🔍</span>
-          <input
+<img src="/icons/search.png" className="pixel-icon" width="28" height="28" alt="" />          <input
             type="text"
             placeholder="Search notes, ideas & dreams..."
             value={search}
@@ -74,6 +74,14 @@ export default function Dashboard() {
         </div>
         <div className="dash-user">
           <span className="dash-user-name">{user?.name || 'there'}</span>
+          <button
+            className="btn btn-ghost theme-toggle"
+            onClick={toggleTheme}
+            aria-label="Toggle dark mode"
+            title="Toggle dark mode"
+          >
+            {theme === 'light' ? <img src="/icons/moon.png" className="pixel-icon" width="25" height="25" alt="" /> : <img src="/icons/sun.png" className="pixel-icon" width="25" height="25" alt="" />}
+          </button>
           <button className="btn btn-ghost" onClick={handleLogout}>
             Log out
           </button>
@@ -91,12 +99,18 @@ export default function Dashboard() {
                 {loading ? 'Loading…' : `${notes.length} note${notes.length === 1 ? '' : 's'}`}
               </p>
             </div>
-            <button
-              className="btn btn-primary"
-              onClick={() => setToast('Creating notes is coming in PR7 ✍️')}
-            >
-              + New Note
-            </button>
+            <div className="dash-main-actions">
+              <div className="dash-view-toggle" role="group" aria-label="View options">
+                <button className="view-btn active" type="button" aria-label="Grid view">▦</button>
+                <button className="view-btn" type="button" aria-label="List view">☰</button>
+              </div>
+              <button
+                className="btn btn-primary"
+                onClick={() => setToast('Creating notes is coming in PR7 ✍️')}
+              >
+                + New Note
+              </button>
+            </div>
           </div>
 
           {error && <div className="error-banner">{error}</div>}
@@ -114,8 +128,8 @@ export default function Dashboard() {
 
           {!loading && notes.length > 0 && (
             <div className="note-grid">
-              {notes.map((note) => (
-                <NoteCard key={note.id} note={note} />
+              {notes.map((note, i) => (
+                <NoteCard key={note.id} note={note} index={i} />
               ))}
             </div>
           )}

@@ -1,26 +1,54 @@
-@import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Nunito:wght@400;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
 
 :root {
-  --paper: #efe4d3;
-  --board: #d9c7a8;
-  --board-dark: #3a2e22;
-  --ink: #3a2e22;
-  --ink-soft: #6b5c48;
-  --accent: #c65b4e;
-  --accent-dark: #a8473c;
-  --sticky-yellow: #f3d17a;
-  --sticky-pink: #f0a9a4;
-  --sticky-green: #b7cfa5;
-  --sticky-blue: #aac3d6;
-  --sticky-purple: #cbb3d9;
-  --sticky-cream: #f2ead8;
-  --radius: 14px;
-  --shadow: 0 6px 16px rgba(58, 46, 34, 0.18);
-  --focus-ring: 0 0 0 3px rgba(198, 91, 78, 0.45);
+  /* palette: Lilac Ash / Bubblegum Tint / Grape Soda / Blackberry Cream / Midnight Violet */
+  --paper: #eaddd9;
+  --board: #9a4c95;
+  --board-dark: #4d2d52;
+  --ink: #1d1a31;
+  --ink-soft: #6a4f68;
+  --accent: #f08cae;
+  --accent-dark: #9a4c95;
+  --sticky-yellow: #ffd93d;
+  --sticky-pink: #f08cae;
+  --sticky-green: #7ee29c;
+  --sticky-blue: #6ec6ff;
+  --sticky-purple: #9a4c95;
+  --sticky-cream: #f4ece9;
+  --line: 3px;
+  --radius: 0px;
+  --shadow: 4px 4px 0 var(--ink);
+  --shadow-sm: 3px 3px 0 var(--ink);
+  --focus-ring: 0 0 0 3px var(--accent);
+}
+
+[data-theme='dark'] {
+  --paper: #1d1a31;
+  --board: #4d2d52;
+  --board-dark: #14111f;
+  --ink: #f4ece9;
+  --ink-soft: #c1a5a9;
+  --accent: #f08cae;
+  --accent-dark: #9a4c95;
+  --sticky-yellow: #e8c23d;
+  --sticky-pink: #d6789a;
+  --sticky-green: #5fb37e;
+  --sticky-blue: #4e9dcf;
+  --sticky-purple: #9a4c95;
+  --sticky-cream: #2a2540;
+  --shadow: 4px 4px 0 #000;
+  --shadow-sm: 3px 3px 0 #000;
 }
 
 * {
   box-sizing: border-box;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.theme-toggle,
+.theme-toggle-corner {
+  padding: 0.2rem 0.2rem;
 }
 
 html,
@@ -31,17 +59,20 @@ body,
 
 body {
   margin: 0;
-  font-family: 'Nunito', system-ui, sans-serif;
+  font-family: 'VT323', monospace;
+  font-size: 1.15rem;
   color: var(--ink);
-  background: var(--paper);
+  background-color: var(--paper);
+  /* dithered checker texture instead of smooth gradients/blur - pixel art avoids soft blur */
   background-image:
-    radial-gradient(circle at 1px 1px, rgba(58, 46, 34, 0.06) 1px, transparent 0);
-  background-size: 22px 22px;
+    repeating-conic-gradient(rgba(43,33,64,0.05) 0% 25%, transparent 0% 50%);
+  background-size: 8px 8px;
 }
 
 h1, h2, h3 {
-  font-family: 'Patrick Hand', cursive;
+  font-family: 'Press Start 2P', monospace;
   font-weight: 400;
+  line-height: 1.5;
   margin: 0;
 }
 
@@ -60,69 +91,84 @@ a:focus-visible {
   box-shadow: var(--focus-ring);
 }
 
+/* ---------- pixel icon placeholder ----------
+   Swap the content of any .pixel-icon span for a real <img src="..."> and
+   this class already applies crisp, non-blurred scaling for pixel art. */
+.pixel-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  image-rendering: pixelated;
+}
+
+/* ---------- buttons: chunky, hard-cornered, offset "pressed" shadow ---------- */
 .btn {
-  border: none;
-  border-radius: 999px;
-  padding: 0.7rem 1.4rem;
-  font-weight: 700;
-  font-size: 0.95rem;
+  border: var(--line) solid var(--ink);
+  border-radius: var(--radius);
+  padding: 0.65rem 1.3rem;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.7rem;
   cursor: pointer;
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  box-shadow: var(--shadow);
+  transition: transform 0.05s steps(2), box-shadow 0.05s steps(2);
 }
 
 .btn:active {
-  transform: translateY(1px);
+  transform: translate(4px, 4px);
+  box-shadow: 0 0 0 var(--ink);
 }
 
 .btn-primary {
   background: var(--accent);
   color: #fff8ef;
-  box-shadow: 0 4px 0 var(--accent-dark);
 }
 
 .btn-primary:hover {
-  filter: brightness(1.04);
+  background: var(--accent-dark);
 }
 
 .btn-ghost {
-  background: transparent;
+  background: var(--sticky-cream);
   color: var(--ink);
-  border: 2px solid var(--ink);
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  margin-bottom: 1.1rem;
+  gap: 0.4rem;
+  margin-bottom: 1.2rem;
   text-align: left;
 }
 
 .field label {
-  font-weight: 700;
-  font-size: 0.85rem;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.6rem;
   color: var(--ink-soft);
 }
 
 .field input {
-  border: 2px solid #d8c6a8;
-  background: #fffcf6;
-  border-radius: 10px;
-  padding: 0.65rem 0.85rem;
-  font-size: 1rem;
+  border: var(--line) solid var(--ink);
+  border-radius: var(--radius);
+  background: #fffcf3;
+  padding: 0.7rem 0.85rem;
+  font-family: 'VT323', monospace;
+  font-size: 1.2rem;
   color: var(--ink);
+  box-shadow: inset 2px 2px 0 rgba(43, 33, 64, 0.12);
 }
 
 .field input::placeholder {
-  color: #b6a688;
+  color: #b3a583;
+  font-family: 'VT323', monospace;
 }
 
 .error-banner {
-  background: #f7dede;
-  border: 1px solid #d98f8f;
-  color: #7a2b24;
+  background: var(--sticky-pink);
+  border: var(--line) solid var(--accent-dark);
+  color: #5c1c14;
   padding: 0.6rem 0.85rem;
-  border-radius: 10px;
-  font-size: 0.9rem;
+  border-radius: var(--radius);
+  font-size: 1rem;
   margin-bottom: 1rem;
+  box-shadow: var(--shadow-sm);
 }

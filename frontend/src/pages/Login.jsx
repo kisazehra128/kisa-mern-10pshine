@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import '../styles/auth.css';
 
 export default function Login() {
   const { login } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const [form, setForm] = useState({ email: '', password: '' });
@@ -33,12 +35,20 @@ export default function Login() {
 
   return (
     <div className="auth-page">
+      <button
+        className="btn btn-ghost theme-toggle-corner"
+        onClick={toggleTheme}
+        aria-label="Toggle dark mode"
+        title="Toggle dark mode"
+      >
+        {theme === 'light' ? '🌙' : '☀️'}
+      </button>
       <div className="auth-card">
         <div className="auth-brand">
-          <span className="auth-brand-emoji">📝</span>
+          <span className="auth-brand-emoji pixel-icon">📝</span>
         </div>
-        <h1 className="auth-title">Welcome back</h1>
-        <p className="auth-subtitle">Log in to pick up where you left off.</p>
+        <h1 className="auth-title">Log in</h1>
+        <p className="auth-subtitle">Enter your details to access your notes.</p>
 
         {error && <div className="error-banner">{error}</div>}
 
