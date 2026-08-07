@@ -21,7 +21,6 @@ export default function Dashboard() {
   const hasMounted = useRef(false);
 
   const fetchNotes = useCallback(async (searchTerm, signal) => {
-    setLoading(true);
     setError('');
     try {
       const { data } = await client.get('/api/notes', {
@@ -37,18 +36,21 @@ export default function Dashboard() {
       }
       setError('Could not load your notes. Try refreshing.');
     } finally {
-      setLoading(false);
+      if (!signal.aborted) setLoading(false);
     }
   }, [navigate]);
 
   // fetch immediately on first mount, debounce on every search change after
   // that; cancels the previous in-flight request so a slow older response
-  // can't overwrite a newer one (e.g. typing fast)
+  // can't overwrite a newer one (e.g. typing fast). loading is set the
+  // moment a search is scheduled, not just once the request starts, so the
+  // UI doesn't briefly flash "0 notes" during the debounce wait
   useEffect(() => {
     const controller = new AbortController();
     const delay = hasMounted.current ? 350 : 0;
     hasMounted.current = true;
 
+    setLoading(true);
     const id = setTimeout(() => fetchNotes(search, controller.signal), delay);
     return () => {
       clearTimeout(id);
@@ -63,8 +65,12 @@ export default function Dashboard() {
   }, [toast]);
 
   const handleLogout = async () => {
-    await logout();
-    navigate('/login', { replace: true });
+    try {
+      await logout();
+      navigate('/login', { replace: true });
+    } catch {
+      setToast('Could not log out. Try again.');
+    }
   };
 
   return (
