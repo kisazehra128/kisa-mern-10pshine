@@ -1,6 +1,6 @@
 # Notes App
 
-Backend for a Node.js, Express, and MySQL Notes Application. Early development.
+Full-stack Node.js/Express/MySQL + React notes application with per-user authentication.
 
 ## Stack
 
@@ -8,10 +8,13 @@ Backend for a Node.js, Express, and MySQL Notes Application. Early development.
 **Auth:** bcrypt, JWT
 **Validation:** Joi
 **Logging:** Pino (`pino`, `pino-http`, `pino-pretty`)
-**Testing:** Mocha, Chai, Supertest, Sinon, Proxyquire, Postman
+**Testing (backend):** Mocha, Chai, Supertest, Sinon, Proxyquire, Postman
+**Frontend:** React (Vite), React Router, Axios
+**Version control:** Git, feature-branch workflow, CodeRabbit on PRs
 
 ## Where things stand
 
+**Backend**
 - Express server, routing, env config, `.gitignore`, CodeRabbit on PRs
 - MySQL connected — schema, User model, Note model
 - Auth done — register, login, logout, JWT, protected routes
@@ -19,36 +22,61 @@ Backend for a Node.js, Express, and MySQL Notes Application. Early development.
 - Structured logging (Pino) — every request logged, `Authorization` header redacted
 - Centralized error handling — consistent JSON errors, no leaked stack traces
 - Joi request validation — bad input rejected with `400` before hitting the DB
-- 61 automated tests: integration tests (real Express app + real MySQL, self-cleaning) and unit tests (Sinon/Proxyquire-mocked DB layer)
+- CORS enabled for the frontend origin
+- 61 automated tests: integration (real Express app + real MySQL, self-cleaning) and unit (Sinon/Proxyquire-mocked DB layer)
 - Postman collection for manual testing
 
-Frontend not started yet.
+**Frontend**
+- React app scaffolded with Vite
+- Signup and Login pages, wired to the real backend (JWT stored client-side, attached to every request via an axios interceptor)
+- Protected routing — `/dashboard` requires a valid token, redirects to `/login` otherwise
+- Dashboard — fetches and displays the logged-in user's real notes from the backend, with debounced search wired to the API's `?search=` param
+- Dark mode toggle, persisted across sessions
+- Pixel-art visual design, custom color palette
+
+**Not built yet**
+- Creating, editing, or deleting notes from the UI (backend endpoints already support all of this — see API reference below)
+- Rich text editing
+- Category filtering (sidebar categories are currently visual only)
+- User profile screen
 
 ## Setup
 
+### Backend
 ```bash
 cd backend
 npm install
-cp .env.example .env   # fill in DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, JWT_SECRET
+cp .env.example .env   # fill in DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, JWT_SECRET, FRONTEND_URL
 ```
 
 Create the database and apply the schema (name must match `DB_NAME`):
-
 ```bash
 mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS notes_app;"
 mysql -u root -p notes_app < database/schema.sql
 ```
-
-Or run 'database/schema.sql` in MySQL Workbench.
+Or run `database/schema.sql` in MySQL Workbench.
 
 > No separate test database yet — tests run against the same DB and clean up their own data in an `after()` hook.
+
+### Frontend
+```bash
+cd frontend
+npm install
+cp .env.example .env   # points VITE_API_URL at the backend, defaults to http://localhost:5000
+```
 
 ## Running
 
 ```bash
+# backend — from backend/
 npm run dev     # http://localhost:5000
 npm test        # 61 tests — see .mocharc.json for config
+
+# frontend — from frontend/, in a separate terminal
+npm run dev     # http://localhost:5173
 ```
+
+Both need to be running at the same time for the frontend to work — the backend serves the API, the frontend consumes it.
 
 ## API Reference
 
@@ -107,8 +135,19 @@ Full request/response bodies for every endpoint are in the Postman collection.
 
 ## Postman
 
-Files in `postman/`: `Notes-App.postman_collection.json` + `Notes-App-Local.postman_environment.json` (sets `baseUrl` to `localhost:5000`). Import both, select the environment, start the server, run requests in order.
+Files in `backend/postman/`: `Notes-App.postman_collection.json` + `Notes-App-Local.postman_environment.json` (sets `baseUrl` to `localhost:5000`). Import both, select the environment, start the server, run requests in order.
+
+## Branching
+
+Feature branches off `develop`, merged via PR. Branch list so far:
+- `feature/backend/project-setup`
+- `feature/backend/database-and-auth-setup`
+- `feature/backend/authentication`
+- `feature/backend/notes-management`
+- `feature/backend/logging-testing`
+- `feature/frontend/frontend-auth-dashboard` — React setup, login/signup, dashboard, routing, API integration
 
 ## What's next
 
-- Frontend: React setup, auth pages, notes dashboard (will need CORS enabled on the backend)
+- Notes editor
+- Project finalization
