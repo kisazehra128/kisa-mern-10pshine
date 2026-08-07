@@ -13,7 +13,7 @@
   display: flex;
   align-items: center;
   gap: 1.2rem;
-  padding: 0.2rem 1.6rem;
+  padding: 1rem 1.6rem;
   background: var(--board);
   border-bottom: var(--line) solid var(--ink);
 }
@@ -46,6 +46,10 @@
   border-radius: var(--radius);
   padding: 0.6rem 1rem;
   box-shadow: inset 2px 2px 0 rgba(43, 33, 64, 0.12);
+}
+
+.dash-search:focus-within {
+  box-shadow: var(--focus-ring);
 }
 
 .dash-search input {
@@ -249,11 +253,6 @@
   color: #fff8ef;
 }
 
-.btn.theme-toggle,
-.btn.theme-toggle-corner {
-  padding: 0.4rem 0.55rem;
-}
-
 /* ---------- note grid ---------- */
 .note-grid {
   display: grid;
@@ -320,6 +319,7 @@
   line-height: 1.5;
   margin: 0.6rem 0 0.6rem;
   word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .note-card-preview {

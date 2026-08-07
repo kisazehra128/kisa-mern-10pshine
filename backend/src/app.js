@@ -9,11 +9,18 @@ const { notFound, errorHandler } = require('./middleware/errorHandler');
 
 const app = express();
 
+// frontend runs on a different port (Vite dev server), so it needs CORS -
+// FRONTEND_URL is set in .env; the localhost fallback only applies outside
+// production, since a missing FRONTEND_URL in prod should fail loudly, not
+// silently allow only localhost while the real deployed frontend gets blocked
+const isProd = process.env.NODE_ENV === 'production';
+if (isProd && !process.env.FRONTEND_URL) {
+  throw new Error('FRONTEND_URL must be set in production');
+}
 app.use(cors({
-  origin: process.env.FRONTEND_URL || "http://localhost:5173",
+  origin: process.env.FRONTEND_URL || (isProd ? undefined : "http://localhost:5173"),
   credentials: true,
 }));
-
 app.use(requestLogger);
 app.use(express.json());
 

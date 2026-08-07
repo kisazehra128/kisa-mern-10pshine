@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import client from '../api/client';
 import { useAuth } from '../context/AuthContext';
@@ -18,15 +18,19 @@ export default function Dashboard() {
   const [search, setSearch] = useState('');
   const [toast, setToast] = useState('');
 
-  const fetchNotes = useCallback(async (searchTerm) => {
+  const hasMounted = useRef(false);
+
+  const fetchNotes = useCallback(async (searchTerm, signal) => {
     setLoading(true);
     setError('');
     try {
       const { data } = await client.get('/api/notes', {
         params: searchTerm ? { search: searchTerm } : {},
+        signal,
       });
       setNotes(data.notes || []);
     } catch (err) {
+      if (err.code === 'ERR_CANCELED') return; // superseded by a newer request, ignore
       if (err.response?.status === 401) {
         navigate('/login', { replace: true });
         return;
@@ -37,14 +41,19 @@ export default function Dashboard() {
     }
   }, [navigate]);
 
+  // fetch immediately on first mount, debounce on every search change after
+  // that; cancels the previous in-flight request so a slow older response
+  // can't overwrite a newer one (e.g. typing fast)
   useEffect(() => {
-    fetchNotes('');
-  }, [fetchNotes]);
+    const controller = new AbortController();
+    const delay = hasMounted.current ? 350 : 0;
+    hasMounted.current = true;
 
-  // debounce search so we're not hitting the API on every keystroke
-  useEffect(() => {
-    const id = setTimeout(() => fetchNotes(search), 350);
-    return () => clearTimeout(id);
+    const id = setTimeout(() => fetchNotes(search, controller.signal), delay);
+    return () => {
+      clearTimeout(id);
+      controller.abort();
+    };
   }, [search, fetchNotes]);
 
   useEffect(() => {
@@ -62,10 +71,12 @@ export default function Dashboard() {
     <div className="dash">
       <header className="dash-topbar">
         <div className="dash-logo">
-<img src="/icons/book.png" className="auth-brand-emoji pixel-icon" width="60" height="60" alt="" />          <strong>Note<span className="dash-logo-accent">Pad</span></strong>
+          <span className="dash-logo-icon pixel-icon">📝</span>
+          <strong>Note<span className="dash-logo-accent">Pad</span></strong>
         </div>
         <div className="dash-search">
-<img src="/icons/search.png" className="pixel-icon" width="28" height="28" alt="" />          <input
+          <span className="pixel-icon">🔍</span>
+          <input
             type="text"
             placeholder="Search notes, ideas & dreams..."
             value={search}
@@ -80,7 +91,7 @@ export default function Dashboard() {
             aria-label="Toggle dark mode"
             title="Toggle dark mode"
           >
-            {theme === 'light' ? <img src="/icons/moon.png" className="pixel-icon" width="25" height="25" alt="" /> : <img src="/icons/sun.png" className="pixel-icon" width="25" height="25" alt="" />}
+            {theme === 'light' ? '🌙' : '☀️'}
           </button>
           <button className="btn btn-ghost" onClick={handleLogout}>
             Log out
@@ -101,8 +112,8 @@ export default function Dashboard() {
             </div>
             <div className="dash-main-actions">
               <div className="dash-view-toggle" role="group" aria-label="View options">
-                <button className="view-btn active" type="button" aria-label="Grid view">▦</button>
-                <button className="view-btn" type="button" aria-label="List view">☰</button>
+                <button className="view-btn active" type="button" aria-label="Grid view" aria-pressed="true" disabled title="List view coming in PR7">▦</button>
+                <button className="view-btn" type="button" aria-label="List view" aria-pressed="false" disabled title="List view coming in PR7">☰</button>
               </div>
               <button
                 className="btn btn-primary"

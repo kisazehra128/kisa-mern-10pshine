@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
+@import 'https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap';
 
 :root {
   /* palette: Lilac Ash / Bubblegum Tint / Grape Soda / Blackberry Cream / Midnight Violet */
@@ -44,11 +44,6 @@
   box-sizing: border-box;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
-}
-
-.theme-toggle,
-.theme-toggle-corner {
-  padding: 0.2rem 0.2rem;
 }
 
 html,
@@ -120,7 +115,7 @@ a:focus-visible {
 
 .btn-primary {
   background: var(--accent);
-  color: #fff8ef;
+  color: var(--ink);
 }
 
 .btn-primary:hover {
