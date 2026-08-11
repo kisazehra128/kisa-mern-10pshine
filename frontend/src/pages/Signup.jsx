@@ -46,12 +46,11 @@ export default function Signup() {
         aria-label="Toggle dark mode"
         title="Toggle dark mode"
       >
-        {theme === 'light' ? '🌙' : '☀️'}
+        {theme === 'light' ? <img src="/icons/moon.png" className="pixel-icon" width="18" height="18" alt="" /> : <img src="/icons/sun.png" className="pixel-icon" width="18" height="18" alt="" />}
       </button>
       <div className="auth-card">
         <div className="auth-brand">
-          <span className="auth-brand-emoji pixel-icon">📝</span>
-        </div>
+<img src="/icons/notepad.png" className="auth-brand-emoji pixel-icon" width="40" height="40" alt="" />        </div>
         <h1 className="auth-title">Create an account</h1>
         <p className="auth-subtitle">Every note brings you one step closer.</p>
 

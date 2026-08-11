@@ -41,13 +41,12 @@ export default function Login() {
         aria-label="Toggle dark mode"
         title="Toggle dark mode"
       >
-        {theme === 'light' ? '🌙' : '☀️'}
+        {theme === 'light' ? <img src="/icons/moon.png" className="pixel-icon" width="18" height="18" alt="" /> : <img src="/icons/sun.png" className="pixel-icon" width="18" height="18" alt="" />}
       </button>
       <div className="auth-card">
         <div className="auth-brand">
-          <span className="auth-brand-emoji pixel-icon">📝</span>
-        </div>
-        <h1 className="auth-title">Log in</h1>
+<img src="/icons/notepad.png" className="auth-brand-emoji pixel-icon" width="40" height="40" alt="" />        </div>
+        <h1 className="auth-title">Welcome to your NotePad!</h1>
         <p className="auth-subtitle">Enter your details to access your notes.</p>
 
         {error && <div className="error-banner">{error}</div>}
