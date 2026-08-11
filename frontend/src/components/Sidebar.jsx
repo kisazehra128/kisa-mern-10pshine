@@ -1,10 +1,4 @@
-// Categories are visual-only for now - the notes table has no category
-// column yet, so these aren't wired up to real filtering. "All Notes" is
-// the only real, functional item since it reflects what /api/notes returns.
-//
-// icon: currently an emoji placeholder inside .pixel-icon. To swap in real
-// pixel-art images later, replace e.g. {cat.icon} with
-// <img src="/icons/folder.png" className="pixel-icon" width="18" height="18" />
+// categories are just UI for now, not wired to the db yet (no category column)
 const PLACEHOLDER_CATEGORIES = [
   { name: 'Projects',icon: '/icons/folder.png', count: 0 },
   { name: 'Grocery', icon: '/icons/grocery.png', count: 0 },

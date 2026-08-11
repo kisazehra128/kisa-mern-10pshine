@@ -7,7 +7,7 @@ import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import './styles/global.css';
 
-// bounce a logged-in user away from /login and /signup straight to their dashboard
+// if already logged in, don't let them see login/signup again
 function RedirectIfAuthed({ children }) {
   const { isAuthenticated } = useAuth();
   return isAuthenticated ? <Navigate to="/dashboard" replace /> : children;
