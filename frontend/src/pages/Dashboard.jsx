@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import Sidebar from '../components/Sidebar';
 import NoteCard from '../components/NoteCard';
+import NoteEditor from '../components/NoteEditor';
 import '../styles/dashboard.css';
 
 export default function Dashboard() {
@@ -17,6 +18,8 @@ export default function Dashboard() {
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const [toast, setToast] = useState('');
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [activeNote, setActiveNote] = useState(null);
 
   const hasMounted = useRef(false);
 
@@ -40,11 +43,8 @@ export default function Dashboard() {
     }
   }, [navigate]);
 
-  // fetch immediately on first mount, debounce on every search change after
-  // that; cancels the previous in-flight request so a slow older response
-  // can't overwrite a newer one (e.g. typing fast). loading is set the
-  // moment a search is scheduled, not just once the request starts, so the
-  // UI doesn't briefly flash "0 notes" during the debounce wait
+  // debounce search so we're not hitting the api on every keystroke,
+  // but load right away on first mount
   useEffect(() => {
     const controller = new AbortController();
     const delay = hasMounted.current ? 350 : 0;
@@ -73,16 +73,41 @@ export default function Dashboard() {
     }
   };
 
+  const openNewNote = () => {
+    setActiveNote(null);
+    setEditorOpen(true);
+  };
+
+  const openNote = (note) => {
+    setActiveNote(note);
+    setEditorOpen(true);
+  };
+
+  const closeEditor = () => {
+    setEditorOpen(false);
+    setActiveNote(null);
+  };
+
+  const handleSaved = () => {
+    closeEditor();
+    setToast(activeNote ? 'Note updated ✏️' : 'Note created ✍️');
+    fetchNotes(search, undefined);
+  };
+
+  const handleDeleted = () => {
+    closeEditor();
+    setToast('Note deleted 🗑️');
+    fetchNotes(search, undefined);
+  };
+
   return (
     <div className="dash">
       <header className="dash-topbar">
         <div className="dash-logo">
-          <span className="dash-logo-icon pixel-icon">📝</span>
-          <strong>Note<span className="dash-logo-accent">Pad</span></strong>
+<img src="/icons/book.png" className="dash-logo-icon pixel-icon" width="24" height="24" alt="" />          <strong>Note<span className="dash-logo-accent">Pad</span></strong>
         </div>
         <div className="dash-search">
-          <span className="pixel-icon">🔍</span>
-          <input
+<img src="/icons/search.png" className="pixel-icon" width="18" height="18" alt="" />          <input
             type="text"
             placeholder="Search notes, ideas & dreams..."
             value={search}
@@ -97,7 +122,7 @@ export default function Dashboard() {
             aria-label="Toggle dark mode"
             title="Toggle dark mode"
           >
-            {theme === 'light' ? '🌙' : '☀️'}
+            {theme === 'light' ? <img src="/icons/moon.png" className="pixel-icon" width="18" height="18" alt="" /> : <img src="/icons/sun.png" className="pixel-icon" width="18" height="18" alt="" />}
           </button>
           <button className="btn btn-ghost" onClick={handleLogout}>
             Log out
@@ -117,13 +142,9 @@ export default function Dashboard() {
               </p>
             </div>
             <div className="dash-main-actions">
-              <div className="dash-view-toggle" role="group" aria-label="View options">
-                <button className="view-btn active" type="button" aria-label="Grid view" aria-pressed="true" disabled title="List view coming in PR7">▦</button>
-                <button className="view-btn" type="button" aria-label="List view" aria-pressed="false" disabled title="List view coming in PR7">☰</button>
-              </div>
               <button
                 className="btn btn-primary"
-                onClick={() => setToast('Creating notes is coming in PR7 ✍️')}
+                onClick={openNewNote}
               >
                 + New Note
               </button>
@@ -146,7 +167,7 @@ export default function Dashboard() {
           {!loading && notes.length > 0 && (
             <div className="note-grid">
               {notes.map((note, i) => (
-                <NoteCard key={note.id} note={note} index={i} />
+                <NoteCard key={note.id} note={note} index={i} onClick={() => openNote(note)} />
               ))}
             </div>
           )}
@@ -154,6 +175,15 @@ export default function Dashboard() {
       </div>
 
       {toast && <div className="toast">{toast}</div>}
+
+      {editorOpen && (
+        <NoteEditor
+          note={activeNote}
+          onClose={closeEditor}
+          onSaved={handleSaved}
+          onDeleted={handleDeleted}
+        />
+      )}
     </div>
   );
 }
