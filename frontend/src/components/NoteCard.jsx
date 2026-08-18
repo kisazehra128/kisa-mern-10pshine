@@ -1,4 +1,3 @@
-// just cycles through for visual variety, not tied to real data
 const DECORATIONS = ['pin-red', 'tape-check', 'pin-green', 'clip'];
 
 function formatDate(iso) {
@@ -19,7 +18,7 @@ function truncateHtml(html, maxChars = 220) {
   return text.slice(0, maxChars).trim() + '…';
 }
 
-export default function NoteCard({ note, index = 0, onClick }) {
+export default function NoteCard({ note, category, index = 0, onClick }) {
   const deco = DECORATIONS[index % DECORATIONS.length];
   const preview = truncateHtml(note.content);
 
@@ -41,6 +40,7 @@ export default function NoteCard({ note, index = 0, onClick }) {
 
       <div className="note-card-footer">
         <span className="note-card-date">{formatDate(note.updated_at || note.created_at)}</span>
+        {category && <span className="note-card-badge">{category.name}</span>}
       </div>
     </div>
   );

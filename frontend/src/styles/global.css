@@ -1,20 +1,20 @@
 @import 'https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap';
 
 :root {
-  /* palette: Lilac Ash / Bubblegum Tint / Grape Soda / Blackberry Cream / Midnight Violet */
-  --paper: #eaddd9;
-  --board: #9a4c95;
-  --board-dark: #4d2d52;
-  --ink: #1d1a31;
-  --ink-soft: #6a4f68;
-  --accent: #f08cae;
-  --accent-dark: #9a4c95;
-  --sticky-yellow: #ffd93d;
-  --sticky-pink: #f08cae;
-  --sticky-green: #7ee29c;
-  --sticky-blue: #6ec6ff;
-  --sticky-purple: #9a4c95;
-  --sticky-cream: #f4ece9;
+  --paper: #faf9f7;
+  --board: #8fa8bd;
+  --board-dark: #2a3542;
+  --ink: #1c1b1a;
+  --ink-soft: #6b6660;
+  --accent: #46698a;
+  --accent-dark: #345070;
+  --sticky-yellow: #ffb800;
+  --sticky-pink: #ee2c4a;
+  --sticky-green: #44cc77;
+  --sticky-blue: #8fa8bd;
+  --sticky-purple: #2a3542;
+  --sticky-cream: #f1efec;
+  --input-bg: #fffcf3;
   --line: 3px;
   --radius: 0px;
   --shadow: 4px 4px 0 var(--ink);
@@ -23,19 +23,20 @@
 }
 
 [data-theme='dark'] {
-  --paper: #1d1a31;
-  --board: #4d2d52;
-  --board-dark: #14111f;
-  --ink: #f4ece9;
-  --ink-soft: #c1a5a9;
-  --accent: #f08cae;
-  --accent-dark: #9a4c95;
-  --sticky-yellow: #e8c23d;
-  --sticky-pink: #d6789a;
-  --sticky-green: #5fb37e;
-  --sticky-blue: #4e9dcf;
-  --sticky-purple: #9a4c95;
-  --sticky-cream: #2a2540;
+  --paper: #141414;
+  --board: #2c3e4f;
+  --board-dark: #0f161c;
+  --ink: #f1efec;
+  --ink-soft: #a8a29b;
+  --accent: #6f93ac;
+  --accent-dark: #8fb0c6;
+  --sticky-yellow: #b36a00;
+  --sticky-pink: #a62830;
+  --sticky-green: #309953;
+  --sticky-blue: #2c3e4f;
+  --sticky-purple: #0f161c;
+  --sticky-cream: #1c262f;
+  --input-bg: #1c262f;
   --shadow: 4px 4px 0 #000;
   --shadow-sm: 3px 3px 0 #000;
 }
@@ -58,7 +59,6 @@ body {
   font-size: 1.15rem;
   color: var(--ink);
   background-color: var(--paper);
-  /* dithered checker texture instead of smooth gradients/blur - pixel art avoids soft blur */
   background-image:
     repeating-conic-gradient(rgba(43,33,64,0.05) 0% 25%, transparent 0% 50%);
   background-size: 8px 8px;
@@ -86,9 +86,6 @@ a:focus-visible {
   box-shadow: var(--focus-ring);
 }
 
-/* ---------- pixel icon placeholder ----------
-   Swap the content of any .pixel-icon span for a real <img src="..."> and
-   this class already applies crisp, non-blurred scaling for pixel art. */
 .pixel-icon {
   display: inline-flex;
   align-items: center;
@@ -96,8 +93,8 @@ a:focus-visible {
   image-rendering: pixelated;
 }
 
-/* ---------- buttons: chunky, hard-cornered, offset "pressed" shadow ---------- */
 .btn {
+  display: inline-block;
   border: var(--line) solid var(--ink);
   border-radius: var(--radius);
   padding: 0.65rem 1.3rem;
@@ -106,6 +103,7 @@ a:focus-visible {
   cursor: pointer;
   box-shadow: var(--shadow);
   transition: transform 0.05s steps(2), box-shadow 0.05s steps(2);
+  text-decoration: none;
 }
 
 .btn:active {
@@ -115,7 +113,7 @@ a:focus-visible {
 
 .btn-primary {
   background: var(--accent);
-  color: var(--ink);
+  color: var(--paper);
 }
 
 .btn-primary:hover {
@@ -125,6 +123,15 @@ a:focus-visible {
 .btn-ghost {
   background: var(--sticky-cream);
   color: var(--ink);
+}
+
+.btn-danger {
+  background: #d64545;
+  color: #fff4f0;
+}
+
+.btn-danger:hover {
+  background: #b83636;
 }
 
 .field {
@@ -144,7 +151,7 @@ a:focus-visible {
 .field input {
   border: var(--line) solid var(--ink);
   border-radius: var(--radius);
-  background: #fffcf3;
+  background: var(--input-bg);
   padding: 0.7rem 0.85rem;
   font-family: 'VT323', monospace;
   font-size: 1.2rem;
