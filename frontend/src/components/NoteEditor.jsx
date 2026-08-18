@@ -2,13 +2,15 @@ import { useState, useEffect } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import client from '../api/client';
+import ConfirmDialog from './ConfirmDialog';
 
-// note=null means we're creating a new one, otherwise editing
-export default function NoteEditor({ note, onClose, onSaved, onDeleted }) {
-  const isEditing = Boolean(note);
+export default function NoteEditor({ note, defaultCategory, categories = [], onClose, onSaved, onDeleted }) {
+  const isEditing = Boolean(note?.id);
   const [title, setTitle] = useState(note?.title || '');
+  const [category, setCategory] = useState(note?.category || defaultCategory || '');
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [error, setError] = useState('');
 
   const editor = useEditor({
@@ -16,14 +18,17 @@ export default function NoteEditor({ note, onClose, onSaved, onDeleted }) {
     content: note?.content || '',
   });
 
-  // reset fields when switching notes
   useEffect(() => {
     setTitle(note?.title || '');
-    if (editor) {
-      editor.commands.setContent(note?.content || '');
+    setCategory(note?.category || defaultCategory || '');
+    if (editor && !editor.isDestroyed) {
+      const currentHTML = editor.getHTML();
+      const newHTML = note?.content || '';
+      if (currentHTML !== newHTML) {
+        editor.commands.setContent(newHTML);
+      }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [note?.id]);
+  }, [note, editor, defaultCategory]);
 
   const handleSave = async () => {
     if (!title.trim()) {
@@ -35,9 +40,9 @@ export default function NoteEditor({ note, onClose, onSaved, onDeleted }) {
     const content = editor?.getHTML() || '';
     try {
       if (isEditing) {
-        await client.put(`/api/notes/${note.id}`, { title, content });
+        await client.put(`/api/notes/${note.id}`, { title, content, category: category || null });
       } else {
-        await client.post('/api/notes', { title, content });
+        await client.post('/api/notes', { title, content, category: category || null });
       }
       onSaved();
     } catch (err) {
@@ -49,6 +54,7 @@ export default function NoteEditor({ note, onClose, onSaved, onDeleted }) {
 
   const handleDelete = async () => {
     if (!isEditing) return;
+
     setDeleting(true);
     setError('');
     try {
@@ -57,6 +63,7 @@ export default function NoteEditor({ note, onClose, onSaved, onDeleted }) {
     } catch (err) {
       setError(err.response?.data?.message || 'Could not delete the note.');
       setDeleting(false);
+      setConfirmingDelete(false);
     }
   };
 
@@ -72,7 +79,20 @@ export default function NoteEditor({ note, onClose, onSaved, onDeleted }) {
             onChange={(e) => setTitle(e.target.value)}
             autoFocus
           />
-          <button className="editor-close" onClick={onClose} aria-label="Close editor">✕</button>
+          <select
+            className="editor-category-select"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            title="Category"
+          >
+            <option value="">No category</option>
+            {categories.map((cat) => (
+              <option key={cat.slug} value={cat.slug}>{cat.name}</option>
+            ))}
+          </select>
+          <button className="editor-close" onClick={onClose} aria-label="Close editor">
+            ✕
+          </button>
         </div>
 
         {editor && (
@@ -80,44 +100,61 @@ export default function NoteEditor({ note, onClose, onSaved, onDeleted }) {
             <button
               type="button"
               className={editor.isActive('bold') ? 'active' : ''}
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => editor.chain().focus().toggleBold().run()}
+              title="Bold"
             >
-              B
+              <b>B</b>
             </button>
+
             <button
               type="button"
               className={editor.isActive('italic') ? 'active' : ''}
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => editor.chain().focus().toggleItalic().run()}
+              title="Italic"
             >
-              I
+              <i>I</i>
             </button>
+
             <button
               type="button"
               className={editor.isActive('strike') ? 'active' : ''}
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => editor.chain().focus().toggleStrike().run()}
+              title="Strikethrough"
             >
-              S
+              <s>S</s>
             </button>
-            <button
-              type="button"
-              className={editor.isActive('bulletList') ? 'active' : ''}
-              onClick={() => editor.chain().focus().toggleBulletList().run()}
-            >
-              • List
-            </button>
-            <button
-              type="button"
-              className={editor.isActive('orderedList') ? 'active' : ''}
-              onClick={() => editor.chain().focus().toggleOrderedList().run()}
-            >
-              1. List
-            </button>
+
             <button
               type="button"
               className={editor.isActive('heading', { level: 2 }) ? 'active' : ''}
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+              title="Heading 2"
             >
               H2
+            </button>
+
+            <button
+              type="button"
+              className={editor.isActive('bulletList') ? 'active' : ''}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => editor.chain().focus().toggleBulletList().run()}
+              title="Bullet List"
+            >
+              • List
+            </button>
+
+            <button
+              type="button"
+              className={editor.isActive('orderedList') ? 'active' : ''}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => editor.chain().focus().toggleOrderedList().run()}
+              title="Numbered List"
+            >
+              1. List
             </button>
           </div>
         )}
@@ -131,23 +168,44 @@ export default function NoteEditor({ note, onClose, onSaved, onDeleted }) {
         <div className="editor-footer">
           {isEditing && (
             <button
+              type="button"
               className="btn btn-ghost editor-delete"
-              onClick={handleDelete}
+              onClick={() => setConfirmingDelete(true)}
               disabled={deleting || saving}
             >
               {deleting ? 'Deleting…' : 'Delete'}
             </button>
           )}
           <div className="editor-footer-right">
-            <button className="btn btn-ghost" onClick={onClose} disabled={saving || deleting}>
+            <button
+              type="button"
+              className="btn btn-ghost"
+              onClick={onClose}
+              disabled={saving || deleting}
+            >
               Cancel
             </button>
-            <button className="btn btn-primary" onClick={handleSave} disabled={saving || deleting}>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={handleSave}
+              disabled={saving || deleting}
+            >
               {saving ? 'Saving…' : 'Save'}
             </button>
           </div>
         </div>
       </div>
+
+      {confirmingDelete && (
+        <ConfirmDialog
+          title="Delete this note?"
+          message="This can't be undone."
+          onCancel={() => setConfirmingDelete(false)}
+          onConfirm={handleDelete}
+          busy={deleting}
+        />
+      )}
     </div>
   );
 }

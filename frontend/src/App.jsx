@@ -4,10 +4,10 @@ import { ThemeProvider } from './context/ThemeContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import LoggedOut from './pages/LoggedOut';
 import Dashboard from './pages/Dashboard';
 import './styles/global.css';
 
-// if already logged in, don't let them see login/signup again
 function RedirectIfAuthed({ children }) {
   const { isAuthenticated } = useAuth();
   return isAuthenticated ? <Navigate to="/dashboard" replace /> : children;
@@ -33,6 +33,7 @@ function AppRoutes() {
           </RedirectIfAuthed>
         }
       />
+      <Route path="/logged-out" element={<LoggedOut />} />
       <Route
         path="/dashboard"
         element={
