@@ -32,7 +32,7 @@ describe('notes.controller (unit, mocked noteModel)', () => {
 
   describe('createNote', () => {
     it('creates a note scoped to the logged-in user and returns 201', async () => {
-      noteModelStub.create.resolves({ id: 1, userId: 1, title: 'Title', content: 'Body' });
+      noteModelStub.create.resolves({ id: 1, userId: 1, title: 'Title', content: 'Body', category: null });
 
       const req = { user: { userId: 1 }, body: { title: 'Title', content: 'Body' } };
       const res = makeRes();
@@ -40,8 +40,20 @@ describe('notes.controller (unit, mocked noteModel)', () => {
 
       await notesController.createNote(req, res, next);
 
-      expect(noteModelStub.create.calledWith({ userId: 1, title: 'Title', content: 'Body' })).to.be.true;
+      expect(noteModelStub.create.calledWith({ userId: 1, title: 'Title', content: 'Body', category: null })).to.be.true;
       expect(res.status.calledWith(201)).to.be.true;
+    });
+
+    it('passes the category through when one is given', async () => {
+      noteModelStub.create.resolves({ id: 1, userId: 1, title: 'Title', content: 'Body', category: 'ideas' });
+
+      const req = { user: { userId: 1 }, body: { title: 'Title', content: 'Body', category: 'ideas' } };
+      const res = makeRes();
+      const next = sinon.spy();
+
+      await notesController.createNote(req, res, next);
+
+      expect(noteModelStub.create.calledWith({ userId: 1, title: 'Title', content: 'Body', category: 'ideas' })).to.be.true;
     });
   });
 
@@ -59,6 +71,18 @@ describe('notes.controller (unit, mocked noteModel)', () => {
       await notesController.getNotes(req, res, next);
 
       expect(res.json.firstCall.args[0].notes).to.have.length(2);
+    });
+
+    it('passes the category filter down to the model', async () => {
+      noteModelStub.findAllByUser.resolves([{ id: 1, title: 'A', content: 'x', category: 'study' }]);
+
+      const req = { user: { userId: 1 }, validatedQuery: { category: 'study' } };
+      const res = makeRes();
+      const next = sinon.spy();
+
+      await notesController.getNotes(req, res, next);
+
+      expect(noteModelStub.findAllByUser.calledWith(1, 'study')).to.be.true;
     });
 
     it('filters to only notes matching the search term in title or content', async () => {

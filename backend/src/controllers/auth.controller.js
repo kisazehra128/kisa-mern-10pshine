@@ -2,6 +2,8 @@ const crypto = require('crypto');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const userModel = require('../models/userModel');
+const categoryModel = require('../models/categoryModel');
+const defaultCategories = require('../utils/defaultCategories');
 const AppError = require('../utils/AppError');
 const asyncHandler = require('../utils/asyncHandler');
 const logger = require('../config/logger');
@@ -10,7 +12,6 @@ const tokenBlacklist = require('../utils/tokenBlacklist');
 const register = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
 
-  // don't let someone sign up twice with the same email
   const existingUser = await userModel.findByEmail(email);
   if (existingUser) {
     throw new AppError('that email is already registered', 409);
@@ -19,6 +20,9 @@ const register = asyncHandler(async (req, res) => {
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = await userModel.create({ name, email, hashedPassword });
+  await Promise.all(
+      defaultCategories.map((cat) => categoryModel.create({ userId: newUser.id, ...cat }))
+    );
 
     logger.info({ userId: newUser.id }, 'user registered');
 
@@ -27,9 +31,7 @@ const register = asyncHandler(async (req, res) => {
       user: newUser,
     });
   } catch (err) {
-    // covers the case where two requests both pass the findByEmail check
-    // above at the same time - the DB's UNIQUE constraint catches it here
-    if (err.code === 'ER_DUP_ENTRY') {
+     if (err.code === 'ER_DUP_ENTRY') {
       throw new AppError('that email is already registered', 409);
     }
     throw err;
@@ -40,9 +42,6 @@ const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
   const user = await userModel.findByEmail(email);
-
-  // keeping this vague on purpose, don't want to tell people
-  // whether it was the email or the password that was wrong
   if (!user) {
     throw new AppError('invalid email or password', 401);
   }
@@ -52,8 +51,6 @@ const login = asyncHandler(async (req, res) => {
     throw new AppError('invalid email or password', 401);
   }
 
-  // just the id in here - keeping the token small and not putting
-  // extra personal info in something that gets sent around
   const token = jwt.sign(
     { userId: user.id },
     process.env.JWT_SECRET,
@@ -69,9 +66,6 @@ const login = asyncHandler(async (req, res) => {
   });
 });
 
-// JWTs are stateless, so "logging out" means blacklisting this specific
-// token until it would have expired anyway - the client also discards its
-// copy, but this stops the same token being reused server-side if it leaks
 const logout = asyncHandler(async (req, res) => {
   const authHeader = req.headers.authorization;
   const token = authHeader.split(' ')[1];

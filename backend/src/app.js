@@ -4,15 +4,11 @@ const indexRoutes = require("./routes/index.routes");
 const authRoutes = require('./routes/auth.routes');
 const userRoutes = require('./routes/user.routes');
 const notesRoutes = require('./routes/notes.routes');
+const categoriesRoutes = require('./routes/categories.routes');
 const requestLogger = require('./middleware/requestLogger');
 const { notFound, errorHandler } = require('./middleware/errorHandler');
 
 const app = express();
-
-// frontend runs on a different port (Vite dev server), so it needs CORS -
-// FRONTEND_URL is set in .env; the localhost fallback only applies outside
-// production, since a missing FRONTEND_URL in prod should fail loudly, not
-// silently allow only localhost while the real deployed frontend gets blocked
 const isProd = process.env.NODE_ENV === 'production';
 if (isProd && !process.env.FRONTEND_URL) {
   throw new Error('FRONTEND_URL must be set in production');
@@ -28,9 +24,8 @@ app.use("/", indexRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/notes', notesRoutes);
+app.use('/api/categories', categoriesRoutes);
 
-// catches unmatched routes, then the error handler catches everything else -
-// order matters, both have to come after all the real routes above
 app.use(notFound);
 app.use(errorHandler);
 
