@@ -16,6 +16,7 @@
   top: 1.4rem;
   right: 1.4rem;
   padding: 0.5rem 0.7rem;
+  z-index: 10;
 }
 
 .auth-card {
@@ -67,6 +68,7 @@
 }
 
 .auth-submit {
+  display: block;
   width: 100%;
   margin-top: 0.4rem;
   text-align: center;
@@ -88,4 +90,15 @@
 
 .auth-switch a:hover {
   background: var(--sticky-yellow);
+}
+
+@media (max-width: 400px) {
+  .auth-card {
+    padding: 1.8rem 1.3rem 1.6rem;
+  }
+
+  .theme-toggle-corner {
+    top: 0.8rem;
+    right: 0.8rem;
+  }
 }
