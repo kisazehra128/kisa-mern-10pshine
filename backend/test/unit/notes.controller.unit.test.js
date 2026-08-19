@@ -13,6 +13,7 @@ const noopLogger = { info: sinon.stub(), warn: sinon.stub(), error: sinon.stub()
 
 describe('notes.controller (unit, mocked noteModel)', () => {
   let noteModelStub;
+  let categoryModelStub;
   let notesController;
 
   beforeEach(() => {
@@ -23,9 +24,13 @@ describe('notes.controller (unit, mocked noteModel)', () => {
       update: sinon.stub(),
       delete: sinon.stub(),
     };
+    categoryModelStub = {
+      findBySlug: sinon.stub(),
+    };
 
     notesController = proxyquire('../../src/controllers/notes.controller', {
       '../models/noteModel': noteModelStub,
+      '../models/categoryModel': categoryModelStub,
       '../config/logger': noopLogger,
     });
   });
@@ -44,7 +49,8 @@ describe('notes.controller (unit, mocked noteModel)', () => {
       expect(res.status.calledWith(201)).to.be.true;
     });
 
-    it('passes the category through when one is given', async () => {
+    it('passes the category through when it belongs to the user', async () => {
+      categoryModelStub.findBySlug.resolves({ id: 3, slug: 'ideas' });
       noteModelStub.create.resolves({ id: 1, userId: 1, title: 'Title', content: 'Body', category: 'ideas' });
 
       const req = { user: { userId: 1 }, body: { title: 'Title', content: 'Body', category: 'ideas' } };
@@ -53,7 +59,21 @@ describe('notes.controller (unit, mocked noteModel)', () => {
 
       await notesController.createNote(req, res, next);
 
+      expect(categoryModelStub.findBySlug.calledWith(1, 'ideas')).to.be.true;
       expect(noteModelStub.create.calledWith({ userId: 1, title: 'Title', content: 'Body', category: 'ideas' })).to.be.true;
+    });
+
+    it('rejects a category that does not belong to the user', async () => {
+      categoryModelStub.findBySlug.resolves(undefined);
+
+      const req = { user: { userId: 1 }, body: { title: 'Title', content: 'Body', category: 'someone-elses' } };
+      const res = makeRes();
+      const next = sinon.spy();
+
+      await notesController.createNote(req, res, next);
+
+      expect(noteModelStub.create.called).to.be.false;
+      expect(next.firstCall.args[0].statusCode).to.equal(400);
     });
   });
 
@@ -140,6 +160,19 @@ describe('notes.controller (unit, mocked noteModel)', () => {
       await notesController.updateNote(req, res, next);
 
       expect(res.status.calledWith(200)).to.be.true;
+    });
+
+    it('rejects a category that does not belong to the user', async () => {
+      categoryModelStub.findBySlug.resolves(undefined);
+
+      const req = { user: { userId: 1 }, params: { id: '1' }, body: { title: 'New', content: 'c', category: 'not-mine' } };
+      const res = makeRes();
+      const next = sinon.spy();
+
+      await notesController.updateNote(req, res, next);
+
+      expect(noteModelStub.update.called).to.be.false;
+      expect(next.firstCall.args[0].statusCode).to.equal(400);
     });
 
     it('forwards a 404 AppError when the note is not found or not owned by the user', async () => {

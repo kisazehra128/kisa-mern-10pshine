@@ -81,7 +81,9 @@ a {
 
 button:focus-visible,
 input:focus-visible,
-a:focus-visible {
+a:focus-visible,
+select:focus-visible,
+[role='button']:focus-visible {
   outline: none;
   box-shadow: var(--focus-ring);
 }
@@ -94,7 +96,6 @@ a:focus-visible {
 }
 
 .btn {
-  display: inline-block;
   border: var(--line) solid var(--ink);
   border-radius: var(--radius);
   padding: 0.65rem 1.3rem;
@@ -103,7 +104,6 @@ a:focus-visible {
   cursor: pointer;
   box-shadow: var(--shadow);
   transition: transform 0.05s steps(2), box-shadow 0.05s steps(2);
-  text-decoration: none;
 }
 
 .btn:active {

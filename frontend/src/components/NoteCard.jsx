@@ -8,22 +8,34 @@ function formatDate(iso) {
     year: 'numeric',
   });
 }
-
-function truncateHtml(html, maxChars = 220) {
+function htmlToPreviewText(html, maxChars = 220) {
   if (!html) return '';
   const div = document.createElement('div');
   div.innerHTML = html;
-  const text = div.textContent || div.innerText || '';
-  if (text.length <= maxChars) return html;
+  const text = (div.textContent || div.innerText || '').trim();
+  if (text.length <= maxChars) return text;
   return text.slice(0, maxChars).trim() + '…';
 }
 
 export default function NoteCard({ note, category, index = 0, onClick }) {
   const deco = DECORATIONS[index % DECORATIONS.length];
-  const preview = truncateHtml(note.content);
+  const preview = htmlToPreviewText(note.content);
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onClick?.();
+    }
+  };
 
   return (
-    <div className="note-card" onClick={onClick}>
+    <div
+      className="note-card"
+      role="button"
+      tabIndex={0}
+      onClick={onClick}
+      onKeyDown={handleKeyDown}
+    >
       <div className={`note-deco note-deco-${deco}`} aria-hidden="true">
         {deco === 'pin-red' && <span className="pin pin-red" />}
         {deco === 'pin-green' && <span className="pin pin-green" />}
@@ -32,11 +44,7 @@ export default function NoteCard({ note, category, index = 0, onClick }) {
       </div>
 
       <div className="note-card-title">{note.title}</div>
-      {preview ? (
-        <div className="note-card-preview" dangerouslySetInnerHTML={{ __html: preview }} />
-      ) : (
-        <div className="note-card-preview">No content yet.</div>
-      )}
+      <div className="note-card-preview">{preview || 'No content yet.'}</div>
 
       <div className="note-card-footer">
         <span className="note-card-date">{formatDate(note.updated_at || note.created_at)}</span>
