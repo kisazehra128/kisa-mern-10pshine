@@ -25,6 +25,7 @@ export default function Dashboard() {
   const [editorOpen, setEditorOpen] = useState(false);
   const [activeNote, setActiveNote] = useState(null);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const hasMounted = useRef(false);
 
@@ -53,12 +54,14 @@ export default function Dashboard() {
     }
   }, [navigate]);
 
+  // sidebar categories + counts don't care about search/category filters - always the full picture
   const fetchCategories = useCallback(async () => {
     try {
       const { data } = await client.get('/api/categories');
       setTotalCount(data.total || 0);
       setCategories(data.categories || []);
     } catch {
+      // sidebar data is a nice-to-have, don't blow up the dashboard if this fails
     }
   }, []);
 
@@ -102,16 +105,25 @@ export default function Dashboard() {
 
   const handleLogout = async () => {
     const email = user?.email;
-     navigate('/logged-out', { replace: true, state: { email } });
+    // navigate away first - clearing auth state before this would make
+    // ProtectedRoute redirect to /login before this line ever runs
+    navigate('/logged-out', { replace: true, state: { email } });
     try {
       await logout();
     } catch {
+      // already navigated away, local auth state gets cleared regardless
     }
   };
 
   const openNewNote = () => {
     setActiveNote(null);
     setEditorOpen(true);
+  };
+
+  // mobile: picking something in the drawer should close it behind you
+  const selectCategory = (slug) => {
+    setCategory(slug);
+    setSidebarOpen(false);
   };
 
   const openNote = (note) => {
@@ -141,6 +153,15 @@ export default function Dashboard() {
   return (
     <div className="dash">
       <header className="dash-topbar">
+        <button
+          type="button"
+          className="dash-menu-toggle"
+          onClick={() => setSidebarOpen(true)}
+          aria-label="Open categories"
+          title="Categories"
+        >
+          ☰
+        </button>
         <div className="dash-logo">
 <img src="/icons/book.png" className="dash-logo-icon pixel-icon" width="24" height="24" alt="" />          <strong>Note<span className="dash-logo-accent">Pad</span></strong>
         </div>
@@ -175,11 +196,16 @@ export default function Dashboard() {
       </header>
 
       <div className="dash-body">
+        {sidebarOpen && (
+          <div className="dash-sidebar-backdrop" onClick={() => setSidebarOpen(false)} />
+        )}
         <Sidebar
+          open={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
           totalCount={totalCount}
           categories={categories}
           activeCategory={category}
-          onSelect={setCategory}
+          onSelect={selectCategory}
           onCreateCategory={createCategory}
           onDeleteCategory={deleteCategory}
         />
