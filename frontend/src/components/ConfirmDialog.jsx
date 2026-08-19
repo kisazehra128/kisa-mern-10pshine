@@ -13,7 +13,13 @@ export default function ConfirmDialog({ title, message, confirmLabel = 'Delete',
   }, [onCancel]);
 
   return (
-    <div className="confirm-overlay" onClick={onCancel}>
+    <div
+      className="confirm-overlay"
+      onClick={(e) => {
+         e.stopPropagation();
+        onCancel();
+      }}
+    >
       <div
         className="confirm-modal"
         role="dialog"
