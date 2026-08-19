@@ -1,8 +1,4 @@
-// simple in-memory blacklist for logged-out tokens. good enough for a
-// single-instance app; a real multi-instance production setup would want
-// this backed by something shared, like Redis, instead
-const blacklist = new Map(); // token -> expiry (unix seconds)
-
+const blacklist = new Map(); 
 function add(token, exp) {
   blacklist.set(token, exp);
   prune();
@@ -13,7 +9,6 @@ function isBlacklisted(token) {
   return blacklist.has(token);
 }
 
-// drops entries that would have expired anyway, so this doesn't grow forever
 function prune() {
   const now = Math.floor(Date.now() / 1000);
   for (const [token, exp] of blacklist.entries()) {

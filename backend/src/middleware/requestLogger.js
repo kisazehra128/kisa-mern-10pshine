@@ -1,8 +1,5 @@
 const pinoHttp = require('pino-http');
 const logger = require('../config/logger');
-
-// logs every request/response with method, url, status, and response time -
-// redacts the Authorization header so JWTs never end up in the logs
 const requestLogger = pinoHttp({
   logger,
   redact: {

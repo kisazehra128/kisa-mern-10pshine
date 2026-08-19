@@ -8,7 +8,7 @@ export default function Sidebar({ open, onClose, totalCount, categories, activeC
   const [icon, setIcon] = useState(DEFAULT_ICON);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const [pendingDelete, setPendingDelete] = useState(null); // the category object, or null
+  const [pendingDelete, setPendingDelete] = useState(null);  
   const [deleting, setDeleting] = useState(false);
 
   const openForm = () => {
@@ -48,7 +48,6 @@ export default function Sidebar({ open, onClose, totalCount, categories, activeC
       await onDeleteCategory(pendingDelete.id);
       setPendingDelete(null);
     } catch {
-      // leave the dialog open so they can see something went wrong and retry/cancel
     } finally {
       setDeleting(false);
     }

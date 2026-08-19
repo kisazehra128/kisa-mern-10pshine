@@ -1,7 +1,5 @@
 const AppError = require('../utils/AppError');
 
-// validates req[property] (body/query/params) against a Joi schema and
-// replaces it with the validated (and trimmed/coerced) value on success
 function validate(schema, property = 'body') {
   return (req, res, next) => {
     const { error, value } = schema.validate(req[property], {

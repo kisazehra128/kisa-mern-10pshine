@@ -54,14 +54,12 @@ export default function Dashboard() {
     }
   }, [navigate]);
 
-  // sidebar categories + counts don't care about search/category filters - always the full picture
   const fetchCategories = useCallback(async () => {
     try {
       const { data } = await client.get('/api/categories');
       setTotalCount(data.total || 0);
       setCategories(data.categories || []);
     } catch {
-      // sidebar data is a nice-to-have, don't blow up the dashboard if this fails
     }
   }, []);
 
@@ -105,13 +103,10 @@ export default function Dashboard() {
 
   const handleLogout = async () => {
     const email = user?.email;
-    // navigate away first - clearing auth state before this would make
-    // ProtectedRoute redirect to /login before this line ever runs
-    navigate('/logged-out', { replace: true, state: { email } });
+     navigate('/logged-out', { replace: true, state: { email } });
     try {
       await logout();
     } catch {
-      // already navigated away, local auth state gets cleared regardless
     }
   };
 
@@ -120,7 +115,6 @@ export default function Dashboard() {
     setEditorOpen(true);
   };
 
-  // mobile: picking something in the drawer should close it behind you
   const selectCategory = (slug) => {
     setCategory(slug);
     setSidebarOpen(false);
