@@ -43,14 +43,14 @@ export default function Dashboard() {
       const { data } = await client.get('/api/notes', { params, signal });
       setNotes(data.notes || []);
     } catch (err) {
-      if (err.code === 'ERR_CANCELED') return; 
+      if (err.code === 'ERR_CANCELED') return;
       if (err.response?.status === 401) {
         navigate('/login', { replace: true });
         return;
       }
       setError('Could not load your notes. Try refreshing.');
     } finally {
-      if (!signal.aborted) setLoading(false);
+     if (!signal?.aborted) setLoading(false);
     }
   }, [navigate]);
 
@@ -60,6 +60,7 @@ export default function Dashboard() {
       setTotalCount(data.total || 0);
       setCategories(data.categories || []);
     } catch {
+      setToast('Could not load categories. Try refreshing.');
     }
   }, []);
 
@@ -71,11 +72,12 @@ export default function Dashboard() {
   const deleteCategory = async (id) => {
     const deletedSlug = categories.find((c) => c.id === id)?.slug;
     await client.delete(`/api/categories/${id}`);
-    if (category && category === deletedSlug) {
-      setCategory(null);
-    }
     fetchCategories();
-    fetchNotes(search, category === deletedSlug ? null : category, undefined);
+     if (category && category === deletedSlug) {
+      setCategory(null);
+    } else {
+      fetchNotes(search, category, undefined);
+    }
   };
 
   useEffect(() => {

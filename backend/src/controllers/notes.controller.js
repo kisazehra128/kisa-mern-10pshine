@@ -1,16 +1,26 @@
 const noteModel = require('../models/noteModel');
+const categoryModel = require('../models/categoryModel');
 const AppError = require('../utils/AppError');
 const asyncHandler = require('../utils/asyncHandler');
 const logger = require('../config/logger');
+async function resolveCategory(userId, category) {
+  if (!category) return null;
+  const owned = await categoryModel.findBySlug(userId, category);
+  if (!owned) {
+    throw new AppError('category not found', 400);
+  }
+  return owned.slug;
+}
 
 const createNote = asyncHandler(async (req, res) => {
   const { title, content, category } = req.body;
+  const resolvedCategory = await resolveCategory(req.user.userId, category);
 
   const newNote = await noteModel.create({
     userId: req.user.userId,
     title,
     content: content || '',
-    category: category || null,
+    category: resolvedCategory,
   });
 
   logger.info({ userId: req.user.userId, noteId: newNote.id }, 'note created');
@@ -44,15 +54,16 @@ const getNoteById = asyncHandler(async (req, res) => {
 
 const updateNote = asyncHandler(async (req, res) => {
   const { title, content, category } = req.body;
+  const resolvedCategory = await resolveCategory(req.user.userId, category);
 
   const updated = await noteModel.update(req.params.id, req.user.userId, {
     title,
     content: content || '',
-    category: category || null,
+    category: resolvedCategory,
   });
 
   if (!updated) {
-     throw new AppError('note not found', 404);
+    throw new AppError('note not found', 404);
   }
 
   logger.info({ userId: req.user.userId, noteId: req.params.id }, 'note updated');

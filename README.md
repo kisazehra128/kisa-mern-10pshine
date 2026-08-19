@@ -14,7 +14,7 @@ Testing: Mocha, Chai, Supertest, Sinon
 - Categories: per-user, create/delete your own, filter notes by category, live counts in the sidebar
 - Confirm dialogs on all deletes (no browser popups)
 - Dark mode, responsive layout, user profile
-- 95 backend tests
+- 92 backend tests
 
 ## Setup
 
@@ -36,12 +36,23 @@ cp .env.example .env   # VITE_API_URL, defaults to http://localhost:5000
 
 ## Running
 
-```bash
-# backend
-npm run dev     # http://localhost:5000
-npm test
+Backend and frontend each need their own terminal, running at the same time.
 
-# frontend (separate terminal)
+```bash
+# terminal 1 — backend
+cd backend
+npm run dev     # http://localhost:5000
+```
+
+```bash
+# terminal 2 — backend tests
+cd backend
+npm test
+```
+
+```bash
+# terminal 3 — frontend
+cd frontend
 npm run dev     # http://localhost:5173
 ```
 
@@ -73,3 +84,4 @@ PR #8 — `feature/project-finalization`
 - Bug fixes
 - Code cleanup
 - Optional: export/import notes
+

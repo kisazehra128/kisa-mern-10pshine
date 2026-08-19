@@ -8,8 +8,9 @@ export default function Sidebar({ open, onClose, totalCount, categories, activeC
   const [icon, setIcon] = useState(DEFAULT_ICON);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const [pendingDelete, setPendingDelete] = useState(null);  
+  const [pendingDelete, setPendingDelete] = useState(null); 
   const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
 
   const openForm = () => {
     setName('');
@@ -44,10 +45,12 @@ export default function Sidebar({ open, onClose, totalCount, categories, activeC
   const confirmDelete = async () => {
     if (!pendingDelete) return;
     setDeleting(true);
+    setDeleteError('');
     try {
       await onDeleteCategory(pendingDelete.id);
       setPendingDelete(null);
-    } catch {
+    } catch (err) {
+      setDeleteError(err.response?.data?.message || 'Could not delete that category.');
     } finally {
       setDeleting(false);
     }
@@ -86,7 +89,10 @@ export default function Sidebar({ open, onClose, totalCount, categories, activeC
               type="button"
               className="dash-sidebar-delete"
               title={`Delete ${cat.name}`}
-              onClick={() => setPendingDelete(cat)}
+              onClick={() => {
+                setDeleteError('');
+                setPendingDelete(cat);
+              }}
             >
               🗑️
             </button>
@@ -145,6 +151,7 @@ export default function Sidebar({ open, onClose, totalCount, categories, activeC
           onCancel={() => setPendingDelete(null)}
           onConfirm={confirmDelete}
           busy={deleting}
+          error={deleteError}
         />
       )}
     </aside>
