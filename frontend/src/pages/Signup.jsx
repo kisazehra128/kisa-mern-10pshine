@@ -28,7 +28,6 @@ export default function Signup() {
     setSubmitting(true);
     try {
       await register(form.name, form.email, form.password);
-      // register doesn't return a token, so log in right after to get one
       await login(form.email, form.password);
       navigate('/dashboard', { replace: true });
     } catch (err) {

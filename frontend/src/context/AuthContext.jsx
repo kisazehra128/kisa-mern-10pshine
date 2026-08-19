@@ -30,7 +30,6 @@ export function AuthProvider({ children }) {
     try {
       await client.post('/api/auth/logout');
     } catch {
-      // token might already be gone/expired - fine, we're clearing local state either way
     }
     localStorage.removeItem('notepad_token');
     localStorage.removeItem('notepad_user');
