@@ -2,19 +2,19 @@ const { pool } = require('../config/db');
 const logger = require('../config/logger');
 
 const UserModel = {
-  async create({ name, email, hashedPassword }) {
+   async create({ name, email, hashedPassword }, db = pool) {
     try {
-      const [result] = await pool.query(
+      const [result] = await db.query(
         'INSERT INTO users (name, email, password) VALUES (?, ?, ?)',
         [name, email, hashedPassword]
       );
-      return { id: result.insertId, name, email }; 
+      return { id: result.insertId, name, email };  
     } catch (err) {
       logger.error({ err }, 'UserModel.create failed');
       throw err;
     }
   },
-  async findByEmail(email) {
+ async findByEmail(email) {
     try {
       const [rows] = await pool.query(
         'SELECT * FROM users WHERE email = ?',

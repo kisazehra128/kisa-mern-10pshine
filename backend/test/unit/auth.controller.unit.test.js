@@ -16,6 +16,8 @@ describe('auth.controller (unit, mocked dependencies)', () => {
   let categoryModelStub;
   let bcryptStub;
   let jwtStub;
+  let dbStub;
+  let connectionStub;
   let authController;
 
   beforeEach(() => {
@@ -34,10 +36,20 @@ describe('auth.controller (unit, mocked dependencies)', () => {
       sign: sinon.stub(),
       decode: sinon.stub(),
     };
+    connectionStub = {
+      beginTransaction: sinon.stub().resolves(),
+      commit: sinon.stub().resolves(),
+      rollback: sinon.stub().resolves(),
+      release: sinon.stub(),
+    };
+    dbStub = {
+      pool: { getConnection: sinon.stub().resolves(connectionStub) },
+    };
 
     authController = proxyquire('../../src/controllers/auth.controller', {
       '../models/userModel': userModelStub,
       '../models/categoryModel': categoryModelStub,
+      '../config/db': dbStub,
       bcrypt: bcryptStub,
       jsonwebtoken: jwtStub,
       '../config/logger': noopLogger,
@@ -57,6 +69,8 @@ describe('auth.controller (unit, mocked dependencies)', () => {
       await authController.register(req, res, next);
 
       expect(userModelStub.create.calledOnce).to.be.true;
+      expect(connectionStub.commit.calledOnce).to.be.true;
+      expect(connectionStub.release.calledOnce).to.be.true;
       expect(res.status.calledWith(201)).to.be.true;
       expect(res.json.firstCall.args[0]).to.have.property('message', 'user registered');
       expect(next.called).to.be.false;
@@ -108,6 +122,24 @@ describe('auth.controller (unit, mocked dependencies)', () => {
       await authController.register(req, res, next);
 
       expect(next.firstCall.args[0].statusCode).to.equal(409);
+    });
+
+    it('rolls back the transaction if seeding a starter category fails', async () => {
+      userModelStub.findByEmail.resolves(undefined);
+      bcryptStub.hash.resolves('hashed-password');
+      userModelStub.create.resolves({ id: 9, name: 'Test', email: 'test@example.com' });
+      categoryModelStub.create.rejects(new Error('insert failed'));
+
+      const req = { body: { name: 'Test', email: 'test@example.com', password: 'password123' } };
+      const res = makeRes();
+      const next = sinon.spy();
+
+      await authController.register(req, res, next);
+
+      expect(connectionStub.rollback.calledOnce).to.be.true;
+      expect(connectionStub.commit.called).to.be.false;
+      expect(connectionStub.release.calledOnce).to.be.true;
+      expect(next.called).to.be.true;
     });
   });
 

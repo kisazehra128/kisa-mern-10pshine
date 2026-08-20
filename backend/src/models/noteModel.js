@@ -43,9 +43,9 @@ const NoteModel = {
       throw err;
     }
   },
-  async clearCategory(userId, category) {
+  async clearCategory(userId, category, db = pool) {
     try {
-      const [result] = await pool.query(
+      const [result] = await db.query(
         'UPDATE notes SET category = NULL WHERE user_id = ? AND category = ?',
         [userId, category]
       );
@@ -57,13 +57,13 @@ const NoteModel = {
   },
 
   async findById(id, userId) {
-     try {
+    try {
       const [rows] = await pool.query(
         'SELECT * FROM notes WHERE id = ? AND user_id = ?',
         [id, userId]
       );
       return rows[0]; 
-        } catch (err) {
+    } catch (err) {
       logger.error({ err }, 'NoteModel.findById failed');
       throw err;
     }
