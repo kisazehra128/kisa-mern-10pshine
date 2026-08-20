@@ -2,9 +2,9 @@ const { pool } = require('../config/db');
 const logger = require('../config/logger');
 
 const CategoryModel = {
-  async create({ userId, name, slug, icon }) {
+  async create({ userId, name, slug, icon }, db = pool) {
     try {
-      const [result] = await pool.query(
+      const [result] = await db.query(
         'INSERT INTO categories (user_id, name, slug, icon) VALUES (?, ?, ?, ?)',
         [userId, name, slug, icon]
       );
@@ -40,7 +40,7 @@ const CategoryModel = {
       throw err;
     }
   },
-  async findById(id, userId) {
+async findById(id, userId) {
     try {
       const [rows] = await pool.query(
         'SELECT * FROM categories WHERE id = ? AND user_id = ?',
@@ -53,9 +53,9 @@ const CategoryModel = {
     }
   },
 
-  async deleteById(id, userId) {
+  async deleteById(id, userId, db = pool) {
     try {
-      const [result] = await pool.query(
+      const [result] = await db.query(
         'DELETE FROM categories WHERE id = ? AND user_id = ?',
         [id, userId]
       );

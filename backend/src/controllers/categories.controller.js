@@ -1,5 +1,6 @@
 const categoryModel = require('../models/categoryModel');
 const noteModel = require('../models/noteModel');
+const { pool } = require('../config/db');
 const AppError = require('../utils/AppError');
 const asyncHandler = require('../utils/asyncHandler');
 const logger = require('../config/logger');
@@ -29,7 +30,7 @@ const createCategory = asyncHandler(async (req, res) => {
       icon: icon || DEFAULT_ICON,
     });
   } catch (err) {
-   if (err.code === 'ER_DUP_ENTRY') {
+    if (err.code === 'ER_DUP_ENTRY') {
       throw new AppError('you already have a category like that', 409);
     }
     throw err;
@@ -65,8 +66,18 @@ const deleteCategory = asyncHandler(async (req, res) => {
     throw new AppError('category not found', 404);
   }
 
-  await categoryModel.deleteById(req.params.id, req.user.userId);
-  await noteModel.clearCategory(req.user.userId, category.slug);
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+    await categoryModel.deleteById(req.params.id, req.user.userId, connection);
+    await noteModel.clearCategory(req.user.userId, category.slug, connection);
+    await connection.commit();
+  } catch (err) {
+    await connection.rollback();
+    throw err;
+  } finally {
+    connection.release();
+  }
 
   logger.info({ userId: req.user.userId, categoryId: category.id }, 'category deleted');
 

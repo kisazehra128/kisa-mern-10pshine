@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const { pool } = require('../config/db');
 const userModel = require('../models/userModel');
 const categoryModel = require('../models/categoryModel');
 const defaultCategories = require('../utils/defaultCategories');
@@ -17,25 +18,35 @@ const register = asyncHandler(async (req, res) => {
     throw new AppError('that email is already registered', 409);
   }
 
+  const hashedPassword = await bcrypt.hash(password, 10);
+ const connection = await pool.getConnection();
+  let newUser;
   try {
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = await userModel.create({ name, email, hashedPassword });
-  await Promise.all(
-      defaultCategories.map((cat) => categoryModel.create({ userId: newUser.id, ...cat }))
+    await connection.beginTransaction();
+
+    newUser = await userModel.create({ name, email, hashedPassword }, connection);
+
+    await Promise.all(
+      defaultCategories.map((cat) => categoryModel.create({ userId: newUser.id, ...cat }, connection))
     );
 
-    logger.info({ userId: newUser.id }, 'user registered');
-
-    res.status(201).json({
-      message: 'user registered',
-      user: newUser,
-    });
+    await connection.commit();
   } catch (err) {
-     if (err.code === 'ER_DUP_ENTRY') {
+    await connection.rollback();
+    if (err.code === 'ER_DUP_ENTRY') {
       throw new AppError('that email is already registered', 409);
     }
     throw err;
+  } finally {
+    connection.release();
   }
+
+  logger.info({ userId: newUser.id }, 'user registered');
+
+  res.status(201).json({
+    message: 'user registered',
+    user: newUser,
+  });
 });
 
 const login = asyncHandler(async (req, res) => {
@@ -50,8 +61,7 @@ const login = asyncHandler(async (req, res) => {
   if (!passwordMatches) {
     throw new AppError('invalid email or password', 401);
   }
-
-  const token = jwt.sign(
+const token = jwt.sign(
     { userId: user.id },
     process.env.JWT_SECRET,
     { expiresIn: '1h', jwtid: crypto.randomUUID() }
@@ -65,7 +75,6 @@ const login = asyncHandler(async (req, res) => {
     user: { id: user.id, name: user.name, email: user.email },
   });
 });
-
 const logout = asyncHandler(async (req, res) => {
   const authHeader = req.headers.authorization;
   const token = authHeader.split(' ')[1];

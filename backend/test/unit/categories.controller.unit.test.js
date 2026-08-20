@@ -14,6 +14,8 @@ const noopLogger = { info: sinon.stub(), warn: sinon.stub(), error: sinon.stub()
 describe('categories.controller (unit, mocked models)', () => {
   let categoryModelStub;
   let noteModelStub;
+  let dbStub;
+  let connectionStub;
   let categoriesController;
 
   beforeEach(() => {
@@ -28,10 +30,20 @@ describe('categories.controller (unit, mocked models)', () => {
       countByCategory: sinon.stub(),
       clearCategory: sinon.stub(),
     };
+    connectionStub = {
+      beginTransaction: sinon.stub().resolves(),
+      commit: sinon.stub().resolves(),
+      rollback: sinon.stub().resolves(),
+      release: sinon.stub(),
+    };
+    dbStub = {
+      pool: { getConnection: sinon.stub().resolves(connectionStub) },
+    };
 
     categoriesController = proxyquire('../../src/controllers/categories.controller', {
       '../models/categoryModel': categoryModelStub,
       '../models/noteModel': noteModelStub,
+      '../config/db': dbStub,
       '../config/logger': noopLogger,
     });
   });
@@ -148,6 +160,8 @@ describe('categories.controller (unit, mocked models)', () => {
 
       expect(categoryModelStub.deleteById.calledWith('5', 1)).to.be.true;
       expect(noteModelStub.clearCategory.calledWith(1, 'study')).to.be.true;
+      expect(connectionStub.commit.calledOnce).to.be.true;
+      expect(connectionStub.release.calledOnce).to.be.true;
       expect(res.status.calledWith(200)).to.be.true;
     });
 
@@ -162,6 +176,23 @@ describe('categories.controller (unit, mocked models)', () => {
 
       expect(categoryModelStub.deleteById.called).to.be.false;
       expect(next.firstCall.args[0].statusCode).to.equal(404);
+    });
+
+    it('rolls back if clearing the category off notes fails', async () => {
+      categoryModelStub.findById.resolves({ id: 5, userId: 1, slug: 'study', name: 'Study' });
+      categoryModelStub.deleteById.resolves(true);
+      noteModelStub.clearCategory.rejects(new Error('update failed'));
+
+      const req = { user: { userId: 1 }, params: { id: '5' } };
+      const res = makeRes();
+      const next = sinon.spy();
+
+      await categoriesController.deleteCategory(req, res, next);
+
+      expect(connectionStub.rollback.calledOnce).to.be.true;
+      expect(connectionStub.commit.called).to.be.false;
+      expect(connectionStub.release.calledOnce).to.be.true;
+      expect(next.called).to.be.true;
     });
   });
 });
