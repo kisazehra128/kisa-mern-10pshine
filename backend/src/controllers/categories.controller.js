@@ -69,7 +69,12 @@ const deleteCategory = asyncHandler(async (req, res) => {
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
-    await categoryModel.deleteById(req.params.id, req.user.userId, connection);
+
+    const deleted = await categoryModel.deleteById(req.params.id, req.user.userId, connection);
+    if (!deleted) {
+       throw new AppError('category not found', 404);
+    }
+
     await noteModel.clearCategory(req.user.userId, category.slug, connection);
     await connection.commit();
   } catch (err) {

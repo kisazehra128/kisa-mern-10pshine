@@ -30,7 +30,7 @@ describe('categories.controller (unit, mocked models)', () => {
       countByCategory: sinon.stub(),
       clearCategory: sinon.stub(),
     };
-    connectionStub = {
+     connectionStub = {
       beginTransaction: sinon.stub().resolves(),
       commit: sinon.stub().resolves(),
       rollback: sinon.stub().resolves(),
@@ -193,6 +193,22 @@ describe('categories.controller (unit, mocked models)', () => {
       expect(connectionStub.commit.called).to.be.false;
       expect(connectionStub.release.calledOnce).to.be.true;
       expect(next.called).to.be.true;
+    });
+
+    it('bails out instead of clearing notes when the category was already deleted by another request', async () => {
+      categoryModelStub.findById.resolves({ id: 5, userId: 1, slug: 'study', name: 'Study' });
+      categoryModelStub.deleteById.resolves(false);
+
+      const req = { user: { userId: 1 }, params: { id: '5' } };
+      const res = makeRes();
+      const next = sinon.spy();
+
+      await categoriesController.deleteCategory(req, res, next);
+
+      expect(noteModelStub.clearCategory.called).to.be.false;
+      expect(connectionStub.rollback.calledOnce).to.be.true;
+      expect(connectionStub.commit.called).to.be.false;
+      expect(next.firstCall.args[0].statusCode).to.equal(404);
     });
   });
 });
