@@ -11,7 +11,7 @@ function makeRes() {
 
 const noopLogger = { info: sinon.stub(), warn: sinon.stub(), error: sinon.stub() };
 
-describe('notes.controller (unit, mocked noteModel)', () => {
+describe('notes controller', () => {
   let noteModelStub;
   let categoryModelStub;
   let notesController;
@@ -36,7 +36,7 @@ describe('notes.controller (unit, mocked noteModel)', () => {
   });
 
   describe('createNote', () => {
-    it('creates a note scoped to the logged-in user and returns 201', async () => {
+    it('creates a note', async () => {
       noteModelStub.create.resolves({ id: 1, userId: 1, title: 'Title', content: 'Body', category: null });
 
       const req = { user: { userId: 1 }, body: { title: 'Title', content: 'Body' } };
@@ -63,7 +63,7 @@ describe('notes.controller (unit, mocked noteModel)', () => {
       expect(noteModelStub.create.calledWith({ userId: 1, title: 'Title', content: 'Body', category: 'ideas' })).to.be.true;
     });
 
-    it('rejects a category that does not belong to the user', async () => {
+    it('someone else\'s category -> rejected', async () => {
       categoryModelStub.findBySlug.resolves(undefined);
 
       const req = { user: { userId: 1 }, body: { title: 'Title', content: 'Body', category: 'someone-elses' } };
@@ -150,7 +150,7 @@ describe('notes.controller (unit, mocked noteModel)', () => {
   });
 
   describe('updateNote', () => {
-    it('returns 200 when the update succeeds', async () => {
+    it('update works', async () => {
       noteModelStub.update.resolves(true);
 
       const req = { user: { userId: 1 }, params: { id: '1' }, body: { title: 'New', content: 'c' } };
@@ -162,7 +162,7 @@ describe('notes.controller (unit, mocked noteModel)', () => {
       expect(res.status.calledWith(200)).to.be.true;
     });
 
-    it('rejects a category that does not belong to the user', async () => {
+    it('not your category -> 400', async () => {
       categoryModelStub.findBySlug.resolves(undefined);
 
       const req = { user: { userId: 1 }, params: { id: '1' }, body: { title: 'New', content: 'c', category: 'not-mine' } };
@@ -175,7 +175,7 @@ describe('notes.controller (unit, mocked noteModel)', () => {
       expect(next.firstCall.args[0].statusCode).to.equal(400);
     });
 
-    it('forwards a 404 AppError when the note is not found or not owned by the user', async () => {
+    it('note not found/not yours -> 404', async () => {
       noteModelStub.update.resolves(false);
 
       const req = { user: { userId: 1 }, params: { id: '999' }, body: { title: 'New', content: 'c' } };
@@ -189,7 +189,7 @@ describe('notes.controller (unit, mocked noteModel)', () => {
   });
 
   describe('deleteNote', () => {
-    it('returns 200 when the delete succeeds', async () => {
+    it('delete works', async () => {
       noteModelStub.delete.resolves(true);
 
       const req = { user: { userId: 1 }, params: { id: '1' } };
@@ -201,7 +201,7 @@ describe('notes.controller (unit, mocked noteModel)', () => {
       expect(res.status.calledWith(200)).to.be.true;
     });
 
-    it('forwards a 404 AppError when the note is not found or not owned by the user', async () => {
+    it('404 if not found/not yours', async () => {
       noteModelStub.delete.resolves(false);
 
       const req = { user: { userId: 1 }, params: { id: '999' } };

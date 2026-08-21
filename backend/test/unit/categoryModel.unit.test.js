@@ -4,7 +4,7 @@ const proxyquire = require('proxyquire');
 
 const noopLogger = { info: sinon.stub(), warn: sinon.stub(), error: sinon.stub() };
 
-describe('categoryModel (unit, mocked MySQL pool)', () => {
+describe('categoryModel', () => {
   let poolStub;
   let categoryModel;
 
@@ -16,7 +16,7 @@ describe('categoryModel (unit, mocked MySQL pool)', () => {
     });
   });
 
-  it('create() inserts a category and returns it with the new id', async () => {
+  it('create() works', async () => {
     poolStub.query.resolves([{ insertId: 7 }]);
 
     const category = await categoryModel.create({ userId: 1, name: 'Recipes', slug: 'recipes', icon: 'note.png' });
@@ -49,7 +49,7 @@ describe('categoryModel (unit, mocked MySQL pool)', () => {
     expect(category).to.deep.equal({ id: 1, user_id: 1, slug: 'study' });
   });
 
-  it('findBySlug() returns undefined when nothing matches', async () => {
+  it('findBySlug() -> nothing found', async () => {
     poolStub.query.resolves([[]]);
 
     const category = await categoryModel.findBySlug(1, 'nope');
@@ -68,7 +68,7 @@ describe('categoryModel (unit, mocked MySQL pool)', () => {
     expect(category).to.deep.equal({ id: 5, user_id: 1, slug: 'study' });
   });
 
-  it('deleteById() returns true when a row was actually removed', async () => {
+  it('deleteById() success case', async () => {
     poolStub.query.resolves([{ affectedRows: 1 }]);
 
     const deleted = await categoryModel.deleteById(5, 1);

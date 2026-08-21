@@ -11,7 +11,7 @@ function makeRes() {
 
 const noopLogger = { info: sinon.stub(), warn: sinon.stub(), error: sinon.stub() };
 
-describe('auth.controller (unit, mocked dependencies)', () => {
+describe('auth controller - unit tests', () => {
   let userModelStub;
   let categoryModelStub;
   let bcryptStub;
@@ -57,7 +57,7 @@ describe('auth.controller (unit, mocked dependencies)', () => {
   });
 
   describe('register', () => {
-    it('creates a user and returns 201 when the email is not taken', async () => {
+    it('registers a new user', async () => {
       userModelStub.findByEmail.resolves(undefined);
       bcryptStub.hash.resolves('hashed-password');
       userModelStub.create.resolves({ id: 1, name: 'Test', email: 'test@example.com' });
@@ -94,7 +94,7 @@ describe('auth.controller (unit, mocked dependencies)', () => {
       );
     });
 
-    it('forwards a 409 AppError when the email is already registered', async () => {
+    it('duplicate email -> 409', async () => {
       userModelStub.findByEmail.resolves({ id: 1, email: 'test@example.com' });
 
       const req = { body: { name: 'Test', email: 'test@example.com', password: 'password123' } };
@@ -108,7 +108,7 @@ describe('auth.controller (unit, mocked dependencies)', () => {
       expect(next.firstCall.args[0].statusCode).to.equal(409);
     });
 
-    it('translates a DB duplicate-entry race into a 409 AppError', async () => {
+    it('handles the race where two signups hit the same email at once', async () => {
       userModelStub.findByEmail.resolves(undefined);
       bcryptStub.hash.resolves('hashed-password');
       const dupErr = new Error('Duplicate entry');
@@ -144,7 +144,7 @@ describe('auth.controller (unit, mocked dependencies)', () => {
   });
 
   describe('login', () => {
-    it('returns a token and 200 on correct credentials', async () => {
+    it('login works', async () => {
       userModelStub.findByEmail.resolves({ id: 1, name: 'Test', email: 'test@example.com', password: 'hashed' });
       bcryptStub.compare.resolves(true);
       jwtStub.sign.returns('fake.jwt.token');
@@ -159,7 +159,7 @@ describe('auth.controller (unit, mocked dependencies)', () => {
       expect(res.json.firstCall.args[0]).to.have.property('token', 'fake.jwt.token');
     });
 
-    it('forwards a 401 AppError when the user does not exist', async () => {
+    it('no such user -> 401', async () => {
       userModelStub.findByEmail.resolves(undefined);
 
       const req = { body: { email: 'nobody@example.com', password: 'password123' } };
@@ -186,7 +186,7 @@ describe('auth.controller (unit, mocked dependencies)', () => {
   });
 
   describe('logout', () => {
-    it('blacklists the token and returns 200', async () => {
+    it('logout blacklists the token', async () => {
       const blacklistStub = { add: sinon.stub() };
       jwtStub.decode.returns({ exp: Math.floor(Date.now() / 1000) + 3600 });
 
