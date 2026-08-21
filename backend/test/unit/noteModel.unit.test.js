@@ -4,7 +4,7 @@ const proxyquire = require('proxyquire');
 
 const noopLogger = { info: sinon.stub(), warn: sinon.stub(), error: sinon.stub() };
 
-describe('noteModel (unit, mocked MySQL pool)', () => {
+describe('noteModel unit tests', () => {
   let poolStub;
   let noteModel;
 
@@ -16,7 +16,7 @@ describe('noteModel (unit, mocked MySQL pool)', () => {
     });
   });
 
-  it('create() inserts a note and returns it with the new id', async () => {
+  it('create() basic insert', async () => {
     poolStub.query.resolves([{ insertId: 42 }]);
 
     const note = await noteModel.create({ userId: 1, title: 'Title', content: 'Body' });
@@ -37,7 +37,7 @@ describe('noteModel (unit, mocked MySQL pool)', () => {
     expect(note.category).to.equal('study');
   });
 
-  it('findAllByUser() scopes the query to the given user', async () => {
+  it('findAllByUser() is scoped to the user', async () => {
     poolStub.query.resolves([[{ id: 1, user_id: 1, title: 'A' }]]);
 
     const notes = await noteModel.findAllByUser(1);
@@ -70,7 +70,7 @@ describe('noteModel (unit, mocked MySQL pool)', () => {
     expect(rows).to.have.length(2);
   });
 
-  it('clearCategory() nulls out the category on matching notes', async () => {
+  it('clearCategory() untags the notes', async () => {
     poolStub.query.resolves([{ affectedRows: 2 }]);
 
     const cleared = await noteModel.clearCategory(1, 'study');
@@ -100,7 +100,7 @@ describe('noteModel (unit, mocked MySQL pool)', () => {
     expect(note).to.be.undefined;
   });
 
-  it('update() returns true when a row was actually changed', async () => {
+  it('update() success', async () => {
     poolStub.query.resolves([{ affectedRows: 1 }]);
 
     const updated = await noteModel.update(1, 1, { title: 'New', content: 'c' });
@@ -118,7 +118,7 @@ describe('noteModel (unit, mocked MySQL pool)', () => {
     expect(updated).to.be.false;
   });
 
-  it('delete() returns true when a row was actually removed', async () => {
+  it('delete() success', async () => {
     poolStub.query.resolves([{ affectedRows: 1 }]);
 
     const deleted = await noteModel.delete(1, 1);

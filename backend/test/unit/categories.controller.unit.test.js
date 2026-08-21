@@ -11,7 +11,7 @@ function makeRes() {
 
 const noopLogger = { info: sinon.stub(), warn: sinon.stub(), error: sinon.stub() };
 
-describe('categories.controller (unit, mocked models)', () => {
+describe('categories controller', () => {
   let categoryModelStub;
   let noteModelStub;
   let dbStub;
@@ -49,7 +49,7 @@ describe('categories.controller (unit, mocked models)', () => {
   });
 
   describe('createCategory', () => {
-    it('slugifies the name and creates the category', async () => {
+    it('makes a slug from the name', async () => {
       categoryModelStub.findBySlug.resolves(undefined);
       categoryModelStub.create.resolves({ id: 1, userId: 1, name: 'Weekend Trips', slug: 'weekend-trips', icon: 'folder.png' });
 
@@ -80,7 +80,7 @@ describe('categories.controller (unit, mocked models)', () => {
       })).to.be.true;
     });
 
-    it('rejects a name that slugifies to nothing', async () => {
+    it('empty/junk name -> rejected', async () => {
       const req = { user: { userId: 1 }, body: { name: '!!!' } };
       const res = makeRes();
       const next = sinon.spy();
@@ -91,7 +91,7 @@ describe('categories.controller (unit, mocked models)', () => {
       expect(next.firstCall.args[0].statusCode).to.equal(400);
     });
 
-    it('rejects a duplicate category for the same user', async () => {
+    it('no dupes per user', async () => {
       categoryModelStub.findBySlug.resolves({ id: 5, slug: 'study' });
 
       const req = { user: { userId: 1 }, body: { name: 'Study' } };
@@ -121,7 +121,7 @@ describe('categories.controller (unit, mocked models)', () => {
   });
 
   describe('getCategories', () => {
-    it('merges category definitions with their note counts', async () => {
+    it('sidebar counts include the total', async () => {
       categoryModelStub.findAllByUser.resolves([
         { id: 1, slug: 'study', name: 'Study', icon: 'study.png' },
         { id: 2, slug: 'ideas', name: 'Ideas', icon: 'ideas.png' },
@@ -147,7 +147,7 @@ describe('categories.controller (unit, mocked models)', () => {
   });
 
   describe('deleteCategory', () => {
-    it('deletes the category and clears it off any notes using it', async () => {
+    it('deletes a category (notes just get untagged)', async () => {
       categoryModelStub.findById.resolves({ id: 5, userId: 1, slug: 'study', name: 'Study' });
       categoryModelStub.deleteById.resolves(true);
       noteModelStub.clearCategory.resolves(2);

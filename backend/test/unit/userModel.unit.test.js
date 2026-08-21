@@ -4,7 +4,7 @@ const proxyquire = require('proxyquire');
 
 const noopLogger = { info: sinon.stub(), warn: sinon.stub(), error: sinon.stub() };
 
-describe('userModel (unit, mocked MySQL pool)', () => {
+describe('userModel tests', () => {
   let poolStub;
   let userModel;
 
@@ -16,7 +16,7 @@ describe('userModel (unit, mocked MySQL pool)', () => {
     });
   });
 
-  it('create() inserts a user and never returns the password hash', async () => {
+  it('create() never sends the password hash back', async () => {
     poolStub.query.resolves([{ insertId: 7 }]);
 
     const user = await userModel.create({ name: 'Test', email: 'test@example.com', hashedPassword: 'hashed' });
