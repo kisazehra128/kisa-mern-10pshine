@@ -5,6 +5,8 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import Sidebar from '../components/Sidebar';
 import NoteCard from '../components/NoteCard';
+import NoteEditor from '../components/NoteEditor';
+import Profile from '../components/Profile';
 import '../styles/dashboard.css';
 
 export default function Dashboard() {
@@ -16,47 +18,84 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
+  const [category, setCategory] = useState(null);
+  const [categories, setCategories] = useState([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [toast, setToast] = useState('');
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [activeNote, setActiveNote] = useState(null);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const hasMounted = useRef(false);
 
-  const fetchNotes = useCallback(async (searchTerm, signal) => {
+  const activeCategoryLabel = category
+    ? categories.find((c) => c.slug === category)?.name || 'All Notes'
+    : 'All Notes';
+
+  const fetchNotes = useCallback(async (searchTerm, activeCategory, signal) => {
     setError('');
     try {
-      const { data } = await client.get('/api/notes', {
-        params: searchTerm ? { search: searchTerm } : {},
-        signal,
-      });
+      const params = {};
+      if (searchTerm) params.search = searchTerm;
+      if (activeCategory) params.category = activeCategory;
+
+      const { data } = await client.get('/api/notes', { params, signal });
       setNotes(data.notes || []);
     } catch (err) {
-      if (err.code === 'ERR_CANCELED') return; // superseded by a newer request, ignore
+      if (err.code === 'ERR_CANCELED') return;
       if (err.response?.status === 401) {
         navigate('/login', { replace: true });
         return;
       }
       setError('Could not load your notes. Try refreshing.');
     } finally {
-      if (!signal.aborted) setLoading(false);
+     if (!signal?.aborted) setLoading(false);
     }
   }, [navigate]);
 
-  // fetch immediately on first mount, debounce on every search change after
-  // that; cancels the previous in-flight request so a slow older response
-  // can't overwrite a newer one (e.g. typing fast). loading is set the
-  // moment a search is scheduled, not just once the request starts, so the
-  // UI doesn't briefly flash "0 notes" during the debounce wait
+  const fetchCategories = useCallback(async () => {
+    try {
+      const { data } = await client.get('/api/categories');
+      setTotalCount(data.total || 0);
+      setCategories(data.categories || []);
+    } catch {
+      setToast('Could not load categories. Try refreshing.');
+    }
+  }, []);
+
+  const createCategory = async (name, icon) => {
+    await client.post('/api/categories', { name, icon });
+    fetchCategories();
+  };
+
+  const deleteCategory = async (id) => {
+    const deletedSlug = categories.find((c) => c.id === id)?.slug;
+    await client.delete(`/api/categories/${id}`);
+    fetchCategories();
+     if (category && category === deletedSlug) {
+      setCategory(null);
+    } else {
+      fetchNotes(search, category, undefined);
+    }
+  };
+
   useEffect(() => {
     const controller = new AbortController();
     const delay = hasMounted.current ? 350 : 0;
     hasMounted.current = true;
 
     setLoading(true);
-    const id = setTimeout(() => fetchNotes(search, controller.signal), delay);
+    const id = setTimeout(() => fetchNotes(search, category, controller.signal), delay);
     return () => {
       clearTimeout(id);
       controller.abort();
     };
-  }, [search, fetchNotes]);
+  }, [search, category, fetchNotes]);
+
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
 
   useEffect(() => {
     if (!toast) return;
@@ -65,24 +104,65 @@ export default function Dashboard() {
   }, [toast]);
 
   const handleLogout = async () => {
+    const email = user?.email;
+     navigate('/logged-out', { replace: true, state: { email } });
     try {
       await logout();
-      navigate('/login', { replace: true });
     } catch {
-      setToast('Could not log out. Try again.');
     }
+  };
+
+  const openNewNote = () => {
+    setActiveNote(null);
+    setEditorOpen(true);
+  };
+
+  const selectCategory = (slug) => {
+    setCategory(slug);
+    setSidebarOpen(false);
+  };
+
+  const openNote = (note) => {
+    setActiveNote(note);
+    setEditorOpen(true);
+  };
+
+  const closeEditor = () => {
+    setEditorOpen(false);
+    setActiveNote(null);
+  };
+
+  const handleSaved = () => {
+    closeEditor();
+    setToast(activeNote ? 'Note updated ✏️' : 'Note created ✍️');
+    fetchNotes(search, category, undefined);
+    fetchCategories();
+  };
+
+  const handleDeleted = () => {
+    closeEditor();
+    setToast('Note deleted 🗑️');
+    fetchNotes(search, category, undefined);
+    fetchCategories();
   };
 
   return (
     <div className="dash">
       <header className="dash-topbar">
+        <button
+          type="button"
+          className="dash-menu-toggle"
+          onClick={() => setSidebarOpen(true)}
+          aria-label="Open categories"
+          title="Categories"
+        >
+          ☰
+        </button>
         <div className="dash-logo">
-          <span className="dash-logo-icon pixel-icon">📝</span>
-          <strong>Note<span className="dash-logo-accent">Pad</span></strong>
+<img src="/icons/book.png" className="dash-logo-icon pixel-icon" width="24" height="24" alt="" />          <strong>Note<span className="dash-logo-accent">Pad</span></strong>
         </div>
         <div className="dash-search">
-          <span className="pixel-icon">🔍</span>
-          <input
+<img src="/icons/search.png" className="pixel-icon" width="18" height="18" alt="" />          <input
             type="text"
             placeholder="Search notes, ideas & dreams..."
             value={search}
@@ -90,14 +170,20 @@ export default function Dashboard() {
           />
         </div>
         <div className="dash-user">
-          <span className="dash-user-name">{user?.name || 'there'}</span>
+          <button
+            className="dash-user-name dash-user-name-btn"
+            onClick={() => setProfileOpen(true)}
+            title="View profile"
+          >
+            {user?.name || 'there'}
+          </button>
           <button
             className="btn btn-ghost theme-toggle"
             onClick={toggleTheme}
             aria-label="Toggle dark mode"
             title="Toggle dark mode"
           >
-            {theme === 'light' ? '🌙' : '☀️'}
+            {theme === 'light' ? <img src="/icons/moon.png" className="pixel-icon" width="18" height="18" alt="" /> : <img src="/icons/sun.png" className="pixel-icon" width="18" height="18" alt="" />}
           </button>
           <button className="btn btn-ghost" onClick={handleLogout}>
             Log out
@@ -106,24 +192,32 @@ export default function Dashboard() {
       </header>
 
       <div className="dash-body">
-        <Sidebar noteCount={notes.length} />
+        {sidebarOpen && (
+          <div className="dash-sidebar-backdrop" onClick={() => setSidebarOpen(false)} />
+        )}
+        <Sidebar
+          open={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+          totalCount={totalCount}
+          categories={categories}
+          activeCategory={category}
+          onSelect={selectCategory}
+          onCreateCategory={createCategory}
+          onDeleteCategory={deleteCategory}
+        />
 
         <main className="dash-main">
           <div className="dash-main-header">
             <div>
-              <h1 className="dash-main-title">All Notes</h1>
+              <h1 className="dash-main-title">{activeCategoryLabel}</h1>
               <p className="dash-main-sub">
                 {loading ? 'Loading…' : `${notes.length} note${notes.length === 1 ? '' : 's'}`}
               </p>
             </div>
             <div className="dash-main-actions">
-              <div className="dash-view-toggle" role="group" aria-label="View options">
-                <button className="view-btn active" type="button" aria-label="Grid view" aria-pressed="true" disabled title="List view coming in PR7">▦</button>
-                <button className="view-btn" type="button" aria-label="List view" aria-pressed="false" disabled title="List view coming in PR7">☰</button>
-              </div>
               <button
                 className="btn btn-primary"
-                onClick={() => setToast('Creating notes is coming in PR7 ✍️')}
+                onClick={openNewNote}
               >
                 + New Note
               </button>
@@ -138,6 +232,8 @@ export default function Dashboard() {
               <p>
                 {search
                   ? `No notes match "${search}".`
+                  : category
+                  ? `No notes in ${activeCategoryLabel} yet.`
                   : "You haven't created any notes yet."}
               </p>
             </div>
@@ -146,7 +242,13 @@ export default function Dashboard() {
           {!loading && notes.length > 0 && (
             <div className="note-grid">
               {notes.map((note, i) => (
-                <NoteCard key={note.id} note={note} index={i} />
+                <NoteCard
+                  key={note.id}
+                  note={note}
+                  category={categories.find((c) => c.slug === note.category)}
+                  index={i}
+                  onClick={() => openNote(note)}
+                />
               ))}
             </div>
           )}
@@ -154,6 +256,19 @@ export default function Dashboard() {
       </div>
 
       {toast && <div className="toast">{toast}</div>}
+
+      {editorOpen && (
+        <NoteEditor
+          note={activeNote}
+          defaultCategory={category}
+          categories={categories}
+          onClose={closeEditor}
+          onSaved={handleSaved}
+          onDeleted={handleDeleted}
+        />
+      )}
+
+      {profileOpen && <Profile onClose={() => setProfileOpen(false)} />}
     </div>
   );
 }

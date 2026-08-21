@@ -15,7 +15,6 @@ const {
   deleteNote,
 } = require('../controllers/notes.controller');
 
-// every note route needs a valid token - nobody's notes without logging in
 router.use(authenticate);
 
 router.post('/', validate(createNoteSchema), createNote);

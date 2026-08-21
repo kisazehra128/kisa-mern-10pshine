@@ -2,11 +2,6 @@ const { expect } = require('chai');
 const sinon = require('sinon');
 const proxyquire = require('proxyquire');
 
-// these are true unit tests - every dependency of the controller (the
-// database-backed model, bcrypt, jsonwebtoken, the logger) is mocked, so
-// nothing here touches a real database or does real crypto work. we're
-// testing the controller's own logic in isolation.
-
 function makeRes() {
   const res = {};
   res.status = sinon.stub().returns(res);
@@ -16,16 +11,22 @@ function makeRes() {
 
 const noopLogger = { info: sinon.stub(), warn: sinon.stub(), error: sinon.stub() };
 
-describe('auth.controller (unit, mocked dependencies)', () => {
+describe('auth controller - unit tests', () => {
   let userModelStub;
+  let categoryModelStub;
   let bcryptStub;
   let jwtStub;
+  let dbStub;
+  let connectionStub;
   let authController;
 
   beforeEach(() => {
     userModelStub = {
       findByEmail: sinon.stub(),
       create: sinon.stub(),
+    };
+    categoryModelStub = {
+      create: sinon.stub().resolves({}),
     };
     bcryptStub = {
       hash: sinon.stub(),
@@ -35,9 +36,20 @@ describe('auth.controller (unit, mocked dependencies)', () => {
       sign: sinon.stub(),
       decode: sinon.stub(),
     };
+    connectionStub = {
+      beginTransaction: sinon.stub().resolves(),
+      commit: sinon.stub().resolves(),
+      rollback: sinon.stub().resolves(),
+      release: sinon.stub(),
+    };
+    dbStub = {
+      pool: { getConnection: sinon.stub().resolves(connectionStub) },
+    };
 
     authController = proxyquire('../../src/controllers/auth.controller', {
       '../models/userModel': userModelStub,
+      '../models/categoryModel': categoryModelStub,
+      '../config/db': dbStub,
       bcrypt: bcryptStub,
       jsonwebtoken: jwtStub,
       '../config/logger': noopLogger,
@@ -45,7 +57,7 @@ describe('auth.controller (unit, mocked dependencies)', () => {
   });
 
   describe('register', () => {
-    it('creates a user and returns 201 when the email is not taken', async () => {
+    it('registers a new user', async () => {
       userModelStub.findByEmail.resolves(undefined);
       bcryptStub.hash.resolves('hashed-password');
       userModelStub.create.resolves({ id: 1, name: 'Test', email: 'test@example.com' });
@@ -57,12 +69,32 @@ describe('auth.controller (unit, mocked dependencies)', () => {
       await authController.register(req, res, next);
 
       expect(userModelStub.create.calledOnce).to.be.true;
+      expect(connectionStub.commit.calledOnce).to.be.true;
+      expect(connectionStub.release.calledOnce).to.be.true;
       expect(res.status.calledWith(201)).to.be.true;
       expect(res.json.firstCall.args[0]).to.have.property('message', 'user registered');
       expect(next.called).to.be.false;
     });
 
-    it('forwards a 409 AppError when the email is already registered', async () => {
+    it('seeds the 5 starter categories for the new user', async () => {
+      userModelStub.findByEmail.resolves(undefined);
+      bcryptStub.hash.resolves('hashed-password');
+      userModelStub.create.resolves({ id: 9, name: 'Test', email: 'test@example.com' });
+
+      const req = { body: { name: 'Test', email: 'test@example.com', password: 'password123' } };
+      const res = makeRes();
+      const next = sinon.spy();
+
+      await authController.register(req, res, next);
+
+      expect(categoryModelStub.create.callCount).to.equal(5);
+      expect(categoryModelStub.create.args.every(([arg]) => arg.userId === 9)).to.be.true;
+      expect(categoryModelStub.create.args.map(([arg]) => arg.slug)).to.include.members(
+        ['projects', 'grocery', 'personal', 'study', 'ideas']
+      );
+    });
+
+    it('duplicate email -> 409', async () => {
       userModelStub.findByEmail.resolves({ id: 1, email: 'test@example.com' });
 
       const req = { body: { name: 'Test', email: 'test@example.com', password: 'password123' } };
@@ -76,7 +108,7 @@ describe('auth.controller (unit, mocked dependencies)', () => {
       expect(next.firstCall.args[0].statusCode).to.equal(409);
     });
 
-    it('translates a DB duplicate-entry race into a 409 AppError', async () => {
+    it('handles the race where two signups hit the same email at once', async () => {
       userModelStub.findByEmail.resolves(undefined);
       bcryptStub.hash.resolves('hashed-password');
       const dupErr = new Error('Duplicate entry');
@@ -91,10 +123,28 @@ describe('auth.controller (unit, mocked dependencies)', () => {
 
       expect(next.firstCall.args[0].statusCode).to.equal(409);
     });
+
+    it('rolls back the transaction if seeding a starter category fails', async () => {
+      userModelStub.findByEmail.resolves(undefined);
+      bcryptStub.hash.resolves('hashed-password');
+      userModelStub.create.resolves({ id: 9, name: 'Test', email: 'test@example.com' });
+      categoryModelStub.create.rejects(new Error('insert failed'));
+
+      const req = { body: { name: 'Test', email: 'test@example.com', password: 'password123' } };
+      const res = makeRes();
+      const next = sinon.spy();
+
+      await authController.register(req, res, next);
+
+      expect(connectionStub.rollback.calledOnce).to.be.true;
+      expect(connectionStub.commit.called).to.be.false;
+      expect(connectionStub.release.calledOnce).to.be.true;
+      expect(next.called).to.be.true;
+    });
   });
 
   describe('login', () => {
-    it('returns a token and 200 on correct credentials', async () => {
+    it('login works', async () => {
       userModelStub.findByEmail.resolves({ id: 1, name: 'Test', email: 'test@example.com', password: 'hashed' });
       bcryptStub.compare.resolves(true);
       jwtStub.sign.returns('fake.jwt.token');
@@ -109,7 +159,7 @@ describe('auth.controller (unit, mocked dependencies)', () => {
       expect(res.json.firstCall.args[0]).to.have.property('token', 'fake.jwt.token');
     });
 
-    it('forwards a 401 AppError when the user does not exist', async () => {
+    it('no such user -> 401', async () => {
       userModelStub.findByEmail.resolves(undefined);
 
       const req = { body: { email: 'nobody@example.com', password: 'password123' } };
@@ -136,7 +186,7 @@ describe('auth.controller (unit, mocked dependencies)', () => {
   });
 
   describe('logout', () => {
-    it('blacklists the token and returns 200', async () => {
+    it('logout blacklists the token', async () => {
       const blacklistStub = { add: sinon.stub() };
       jwtStub.decode.returns({ exp: Math.floor(Date.now() / 1000) + 3600 });
 

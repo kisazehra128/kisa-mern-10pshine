@@ -32,10 +32,7 @@ describe('Validation (Joi)', () => {
   });
 
   describe('GET /api/notes', () => {
-    // signing our own token here since this only needs to prove the
-    // validation middleware rejects it before any database work happens -
-    // doesn't need a real registered user
-    const fakeToken = jwt.sign({ userId: 999999 }, process.env.JWT_SECRET, { expiresIn: '1h' });
+     const fakeToken = jwt.sign({ userId: 999999 }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
     it('rejects a repeated ?search= query (parsed as an array by Express)', async () => {
       const res = await request(app)
