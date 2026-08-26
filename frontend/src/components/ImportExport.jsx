@@ -5,7 +5,7 @@ import client from '../api/client';
 const MAX_IMPORT_SIZE = 15 * 1024 * 1024;
 
 const SANITIZE_CONFIG = {
-  ALLOWED_TAGS: ['p', 'h2', 'strong', 'em', 's', 'ul', 'ol', 'li', 'img', 'br'],
+  ALLOWED_TAGS: ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong', 'em', 's', 'ul', 'ol', 'li', 'img', 'br'],
   ALLOWED_ATTR: ['src', 'alt', 'title'],
 };
 

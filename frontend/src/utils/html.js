@@ -1,4 +1,4 @@
-export function htmlToPreviewText(html, maxChars) {
+ export function htmlToPreviewText(html, maxChars = 220) {
   const doc = new DOMParser().parseFromString(html || '', 'text/html');
   const text = (doc.body.textContent || '').replace(/\s+/g, ' ').trim();
 

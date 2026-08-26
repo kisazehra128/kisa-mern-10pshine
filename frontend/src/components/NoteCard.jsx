@@ -13,7 +13,7 @@ function formatDate(iso) {
 
 export default function NoteCard({ note, category, index = 0, onClick }) {
   const deco = DECORATIONS[index % DECORATIONS.length];
-  const preview = htmlToPreviewText(note.content);
+  const preview = htmlToPreviewText(note.content,220);
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' || e.key === ' ') {
