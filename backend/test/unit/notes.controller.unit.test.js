@@ -30,6 +30,9 @@ describe('notes controller', () => {
     categoryModelStub = {
       findBySlug: sinon.stub(),
     };
+    categoryModelStub = {
+      findBySlug: sinon.stub(),
+    };
 
     notesController = proxyquire('../../src/controllers/notes.controller', {
       '../models/noteModel': noteModelStub,

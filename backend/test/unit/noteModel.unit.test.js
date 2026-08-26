@@ -210,6 +210,8 @@ describe('noteModel unit tests', () => {
       1,
     ]);
 
+    const [, params] = poolStub.query.firstCall.args;
+    expect(params).to.deep.equal(['New', 'c', null, 1, 1]);
     expect(updated).to.be.true;
   });
 
