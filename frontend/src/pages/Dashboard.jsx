@@ -134,8 +134,9 @@ export default function Dashboard() {
     navigate('/logged-out', { replace: true, state: { email } });
     try {
       await logout();
-    } catch {
-    }
+    } catch (err) {
+  console.error('Logout request failed', err);
+}
   };
 
   const openNewNote = () => {

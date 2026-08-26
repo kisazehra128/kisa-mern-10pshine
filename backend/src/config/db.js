@@ -32,14 +32,16 @@ async function ensureNoteTrashColumn(connection) {
 }
 
 async function testConnection() {
+  let connection;
   try {
-    const connection = await pool.getConnection();
+    connection = await pool.getConnection();
     await ensureNoteTrashColumn(connection);
     logger.info('MySQL connected successfully');
-    connection.release();
   } catch (err) {
     logger.error({ err }, 'MySQL connection failed');
     throw err;
+  } finally {
+    connection?.release();
   }
 }
 

@@ -126,12 +126,12 @@ select:focus-visible,
 }
 
 .btn-danger {
-  background: #d64545;
+  background: #b83636;
   color: #fff4f0;
 }
 
 .btn-danger:hover {
-  background: #b83636;
+  background: #9e2d2d;
 }
 
 .field {

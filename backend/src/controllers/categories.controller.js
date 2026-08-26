@@ -16,7 +16,13 @@ const createCategory = asyncHandler(async (req, res) => {
     throw new AppError('give the category a name with at least one letter or number', 400);
   }
 
-  const existing = await categoryModel.findBySlug(req.user.userId, slug);
+  let existing;
+  try {
+    existing = await categoryModel.findBySlug(req.user.userId, slug);
+  } catch (err) {
+    logger.error({ err, userId: req.user.userId }, 'failed to look up category by slug');
+    throw err;
+  }
   if (existing) {
     throw new AppError('you already have a category like that', 409);
   }
@@ -41,10 +47,16 @@ const createCategory = asyncHandler(async (req, res) => {
   res.status(201).json({ message: 'category created', category });
 });
 const getCategories = asyncHandler(async (req, res) => {
-  const [categories, countRows] = await Promise.all([
-    categoryModel.findAllByUser(req.user.userId),
-    noteModel.countByCategory(req.user.userId),
-  ]);
+  let categories, countRows;
+  try {
+    [categories, countRows] = await Promise.all([
+      categoryModel.findAllByUser(req.user.userId),
+      noteModel.countByCategory(req.user.userId),
+    ]);
+  } catch (err) {
+    logger.error({ err, userId: req.user.userId }, 'failed to load categories');
+    throw err;
+  }
 
   const countBySlug = {};
   let total = 0;
@@ -61,7 +73,13 @@ const getCategories = asyncHandler(async (req, res) => {
   res.status(200).json({ total, categories: withCounts });
 });
 const deleteCategory = asyncHandler(async (req, res) => {
-  const category = await categoryModel.findById(req.params.id, req.user.userId);
+  let category;
+  try {
+    category = await categoryModel.findById(req.params.id, req.user.userId);
+  } catch (err) {
+    logger.error({ err, userId: req.user.userId, categoryId: req.params.id }, 'failed to look up category');
+    throw err;
+  }
   if (!category) {
     throw new AppError('category not found', 404);
   }

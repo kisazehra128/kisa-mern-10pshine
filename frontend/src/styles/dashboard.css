@@ -293,10 +293,10 @@
   padding: 0.35rem 0 0.15rem 0.35rem;
   margin-left: 0.25rem;
   border-left: 2px dashed rgba(240, 230, 210, 0.18);
-  animation: categoryDrop 0.16s ease-out;
+  animation: category-drop 0.16s ease-out;
 }
 
-@keyframes categoryDrop {
+@keyframes category-drop {
   from { opacity: 0; transform: translateY(-5px); }
   to { opacity: 1; transform: translateY(0); }
 }
@@ -580,7 +580,6 @@
   font-size: 0.85rem;
   line-height: 1.5;
   margin: 0.25rem 0 0.7rem;
-  word-break: break-word;
   overflow-wrap: break-word;
 }
 
@@ -707,7 +706,7 @@
   box-sizing: border-box;
 
   background: rgba(0, 0, 0, 0.45);
-  animation: confirmOverlayIn 0.15s ease-out;
+  animation: confirm-overlay-in 0.15s ease-out;
 }
 
 .confirm-modal {
@@ -725,7 +724,7 @@
   box-shadow: 6px 6px 0 var(--ink);
 
   overflow: hidden;
-  animation: confirmModalIn 0.18s ease-out;
+  animation: confirm-modal-in 0.18s ease-out;
 }
 
 .confirm-title {
@@ -770,12 +769,12 @@
   white-space: nowrap;
 }
 
-@keyframes confirmOverlayIn {
+@keyframes confirm-overlay-in {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
-@keyframes confirmModalIn {
+@keyframes confirm-modal-in {
   from {
     opacity: 0;
     transform: translateY(8px) scale(0.98);
@@ -1096,7 +1095,7 @@
 }
 
 @media (max-width: 480px) {
-  .dash-user-name {
+  .dash-user-name:not(.dash-user-name-btn) {
     display: none;
   }
 

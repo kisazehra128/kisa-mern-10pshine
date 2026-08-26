@@ -204,6 +204,7 @@ export default function Sidebar({
                   type="button"
                   className="dash-sidebar-delete"
                   title={`Delete ${cat.name}`}
+                  aria-label={`Delete ${cat.name}`}
                   onClick={() => {
                     setDeleteError('');
                     setPendingDelete(cat);
