@@ -22,7 +22,10 @@ describe('notes controller', () => {
       findAllByUser: sinon.stub(),
       findById: sinon.stub(),
       update: sinon.stub(),
-      delete: sinon.stub(),
+      softDelete: sinon.stub(),
+      restore: sinon.stub(),
+      permanentDelete: sinon.stub(),
+      findTrashByUser: sinon.stub(),
     };
     categoryModelStub = {
       findBySlug: sinon.stub(),
@@ -121,6 +124,38 @@ describe('notes controller', () => {
       expect(notes).to.have.length(1);
       expect(notes[0].id).to.equal(1);
     });
+
+    it('matches multiple search words regardless of order', async () => {
+      noteModelStub.findAllByUser.resolves([
+        { id: 1, title: 'Grocery run', content: '<p>weekly list: milk, eggs</p>' },
+        { id: 2, title: 'Random', content: 'nothing relevant here' },
+      ]);
+
+      const req = { user: { userId: 1 }, validatedQuery: { search: 'list grocery' } };
+      const res = makeRes();
+      const next = sinon.spy();
+
+      await notesController.getNotes(req, res, next);
+
+      const notes = res.json.firstCall.args[0].notes;
+      expect(notes).to.have.length(1);
+      expect(notes[0].id).to.equal(1);
+    });
+
+    it('ignores HTML tags when matching content', async () => {
+      noteModelStub.findAllByUser.resolves([
+        { id: 1, title: 'Note', content: '<p><strong>banana</strong> bread recipe</p>' },
+      ]);
+
+      const req = { user: { userId: 1 }, validatedQuery: { search: 'strong' } };
+      const res = makeRes();
+      const next = sinon.spy();
+
+      await notesController.getNotes(req, res, next);
+
+      const notes = res.json.firstCall.args[0].notes;
+      expect(notes).to.have.length(0);
+    });
   });
 
   describe('getNoteById', () => {
@@ -189,8 +224,8 @@ describe('notes controller', () => {
   });
 
   describe('deleteNote', () => {
-    it('delete works', async () => {
-      noteModelStub.delete.resolves(true);
+    it('moves a note to trash', async () => {
+      noteModelStub.softDelete.resolves(true);
 
       const req = { user: { userId: 1 }, params: { id: '1' } };
       const res = makeRes();
@@ -202,7 +237,7 @@ describe('notes controller', () => {
     });
 
     it('404 if not found/not yours', async () => {
-      noteModelStub.delete.resolves(false);
+      noteModelStub.softDelete.resolves(false);
 
       const req = { user: { userId: 1 }, params: { id: '999' } };
       const res = makeRes();
@@ -211,6 +246,45 @@ describe('notes controller', () => {
       await notesController.deleteNote(req, res, next);
 
       expect(next.firstCall.args[0].statusCode).to.equal(404);
+    });
+  });
+
+  describe('trash actions', () => {
+    it('returns trashed notes', async () => {
+      noteModelStub.findTrashByUser.resolves([{ id: 1, title: 'Deleted' }]);
+
+      const req = { user: { userId: 1 } };
+      const res = makeRes();
+      const next = sinon.spy();
+
+      await notesController.getTrash(req, res, next);
+
+      expect(res.status.calledWith(200)).to.be.true;
+      expect(res.json.firstCall.args[0].notes).to.have.length(1);
+    });
+
+    it('restores a note from trash', async () => {
+      noteModelStub.restore.resolves(true);
+
+      const req = { user: { userId: 1 }, params: { id: '1' } };
+      const res = makeRes();
+      const next = sinon.spy();
+
+      await notesController.restoreNote(req, res, next);
+
+      expect(res.status.calledWith(200)).to.be.true;
+    });
+
+    it('permanently deletes a trashed note', async () => {
+      noteModelStub.permanentDelete.resolves(true);
+
+      const req = { user: { userId: 1 }, params: { id: '1' } };
+      const res = makeRes();
+      const next = sinon.spy();
+
+      await notesController.permanentlyDeleteNote(req, res, next);
+
+      expect(res.status.calledWith(200)).to.be.true;
     });
   });
 });
