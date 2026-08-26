@@ -1,7 +1,13 @@
 import { useRef, useState } from 'react';
+import DOMPurify from 'dompurify';
 import client from '../api/client';
 
 const MAX_IMPORT_SIZE = 15 * 1024 * 1024;
+
+const SANITIZE_CONFIG = {
+  ALLOWED_TAGS: ['p', 'h2', 'strong', 'em', 's', 'ul', 'ol', 'li', 'img', 'br'],
+  ALLOWED_ATTR: ['src', 'alt', 'title'],
+};
 
 function downloadBlob(filename, content, type) {
   const blob = new Blob([content], { type });
@@ -380,6 +386,7 @@ export default function ImportExport({
 
     let imported = 0;
     let skipped = 0;
+    let failed = 0;
 
     for (const article of articles) {
       const title =
@@ -400,17 +407,22 @@ export default function ImportExport({
         continue;
       }
 
-      const content =
-        contentElement?.innerHTML || '';
+      const content = DOMPurify.sanitize(
+        contentElement?.innerHTML || '',
+        SANITIZE_CONFIG
+      );
 
-      await client.post('/api/notes', {
-        title,
-        content,
-        category:
-          categoryMap.get(categoryName) || null,
-      });
-
-      imported += 1;
+      try {
+        await client.post('/api/notes', {
+          title,
+          content,
+          category:
+            categoryMap.get(categoryName) || null,
+        });
+        imported += 1;
+      } catch {
+        failed += 1;
+      }
     }
 
     await onImported?.();
@@ -418,10 +430,11 @@ export default function ImportExport({
     message(
       `Imported ${imported} note${
         imported === 1 ? '' : 's'
-      }${skipped ? `, skipped ${skipped}` : ''} 📥`
+      }${skipped ? `, skipped ${skipped}` : ''}${
+        failed ? `, failed ${failed}` : ''
+      } 📥`
     );
   };
-
   const handleImport = async (event) => {
     const file = event.target.files?.[0];
     event.target.value = '';
@@ -624,7 +637,7 @@ export default function ImportExport({
                   !selectedIds.length || busy
                 }
               >
-                🌐 Export HTML
+                 Export HTML
               </button>
             </div>
           </div>

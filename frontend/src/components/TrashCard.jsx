@@ -1,10 +1,6 @@
 import { useState } from 'react';
 import ConfirmDialog from './ConfirmDialog';
-
-function htmlToPreviewText(html) {
-  const doc = new DOMParser().parseFromString(html || '', 'text/html');
-  return (doc.body.textContent || '').replace(/\s+/g, ' ').trim();
-}
+import { htmlToPreviewText } from '../utils/html';
 
 function formatDate(value) {
   if (!value) return '';

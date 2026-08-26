@@ -75,7 +75,7 @@ const NoteModel = {
   async clearCategory(userId, category, db = pool) {
     try {
       const [result] = await db.query(
-        'UPDATE notes SET category = NULL WHERE user_id = ? AND category = ? AND deleted_at IS NULL',
+        'UPDATE notes SET category = NULL WHERE user_id = ? AND category = ? ',
         [userId, category]
       );
       return result.affectedRows;

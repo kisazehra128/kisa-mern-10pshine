@@ -1,3 +1,5 @@
+import { htmlToPreviewText } from '../utils/html';
+
 const DECORATIONS = ['pin-red', 'tape-check', 'pin-green', 'clip'];
 
 function formatDate(iso) {
@@ -7,14 +9,6 @@ function formatDate(iso) {
     day: 'numeric',
     year: 'numeric',
   });
-}
-function htmlToPreviewText(html, maxChars = 220) {
-  if (!html) return '';
-  const div = document.createElement('div');
-  div.innerHTML = html;
-  const text = (div.textContent || div.innerText || '').trim();
-  if (text.length <= maxChars) return text;
-  return text.slice(0, maxChars).trim() + '…';
 }
 
 export default function NoteCard({ note, category, index = 0, onClick }) {
