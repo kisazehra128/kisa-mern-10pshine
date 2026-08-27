@@ -18,7 +18,7 @@ app.use(cors({
   credentials: true,
 }));
 app.use(requestLogger);
-app.use(express.json());
+app.use(express.json({ limit: '15mb' }));
 
 app.use("/", indexRoutes);
 app.use('/api/auth', authRoutes);

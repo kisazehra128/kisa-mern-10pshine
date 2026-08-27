@@ -14,15 +14,16 @@ const NoteModel = {
       throw err;
     }
   },
+
   async findAllByUser(userId, category) {
     try {
       const [rows] = category
         ? await pool.query(
-            'SELECT * FROM notes WHERE user_id = ? AND category = ? ORDER BY updated_at DESC',
+            'SELECT * FROM notes WHERE user_id = ? AND category = ? AND deleted_at IS NULL ORDER BY updated_at DESC',
             [userId, category]
           )
         : await pool.query(
-            'SELECT * FROM notes WHERE user_id = ? ORDER BY updated_at DESC',
+            'SELECT * FROM notes WHERE user_id = ? AND deleted_at IS NULL ORDER BY updated_at DESC',
             [userId]
           );
       return rows;
@@ -31,10 +32,37 @@ const NoteModel = {
       throw err;
     }
   },
- async countByCategory(userId) {
+
+  async findTrashByUser(userId) {
     try {
       const [rows] = await pool.query(
-        'SELECT category, COUNT(*) AS count FROM notes WHERE user_id = ? GROUP BY category',
+        'SELECT * FROM notes WHERE user_id = ? AND deleted_at IS NOT NULL ORDER BY deleted_at DESC',
+        [userId]
+      );
+      return rows;
+    } catch (err) {
+      logger.error({ err }, 'NoteModel.findTrashByUser failed');
+      throw err;
+    }
+  },
+
+  async countTrash(userId) {
+    try {
+      const [rows] = await pool.query(
+        'SELECT COUNT(*) AS count FROM notes WHERE user_id = ? AND deleted_at IS NOT NULL',
+        [userId]
+      );
+      return rows[0]?.count || 0;
+    } catch (err) {
+      logger.error({ err }, 'NoteModel.countTrash failed');
+      throw err;
+    }
+  },
+
+  async countByCategory(userId) {
+    try {
+      const [rows] = await pool.query(
+        'SELECT category, COUNT(*) AS count FROM notes WHERE user_id = ? AND deleted_at IS NULL GROUP BY category',
         [userId]
       );
       return rows;
@@ -43,10 +71,11 @@ const NoteModel = {
       throw err;
     }
   },
+
   async clearCategory(userId, category, db = pool) {
     try {
       const [result] = await db.query(
-        'UPDATE notes SET category = NULL WHERE user_id = ? AND category = ?',
+        'UPDATE notes SET category = NULL WHERE user_id = ? AND category = ? ',
         [userId, category]
       );
       return result.affectedRows;
@@ -59,10 +88,10 @@ const NoteModel = {
   async findById(id, userId) {
     try {
       const [rows] = await pool.query(
-        'SELECT * FROM notes WHERE id = ? AND user_id = ?',
+        'SELECT * FROM notes WHERE id = ? AND user_id = ? AND deleted_at IS NULL',
         [id, userId]
       );
-      return rows[0]; 
+      return rows[0];
     } catch (err) {
       logger.error({ err }, 'NoteModel.findById failed');
       throw err;
@@ -72,7 +101,7 @@ const NoteModel = {
   async update(id, userId, { title, content, category }) {
     try {
       const [result] = await pool.query(
-        'UPDATE notes SET title = ?, content = ?, category = ? WHERE id = ? AND user_id = ?',
+        'UPDATE notes SET title = ?, content = ?, category = ? WHERE id = ? AND user_id = ? AND deleted_at IS NULL',
         [title, content, category || null, id, userId]
       );
       return result.affectedRows > 0;
@@ -82,15 +111,41 @@ const NoteModel = {
     }
   },
 
-  async delete(id, userId) {
+  async softDelete(id, userId) {
     try {
       const [result] = await pool.query(
-        'DELETE FROM notes WHERE id = ? AND user_id = ?',
+        'UPDATE notes SET deleted_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ? AND deleted_at IS NULL',
         [id, userId]
       );
       return result.affectedRows > 0;
     } catch (err) {
-      logger.error({ err }, 'NoteModel.delete failed');
+      logger.error({ err }, 'NoteModel.softDelete failed');
+      throw err;
+    }
+  },
+
+  async restore(id, userId) {
+    try {
+      const [result] = await pool.query(
+        'UPDATE notes SET deleted_at = NULL WHERE id = ? AND user_id = ? AND deleted_at IS NOT NULL',
+        [id, userId]
+      );
+      return result.affectedRows > 0;
+    } catch (err) {
+      logger.error({ err }, 'NoteModel.restore failed');
+      throw err;
+    }
+  },
+
+  async permanentDelete(id, userId) {
+    try {
+      const [result] = await pool.query(
+        'DELETE FROM notes WHERE id = ? AND user_id = ? AND deleted_at IS NOT NULL',
+        [id, userId]
+      );
+      return result.affectedRows > 0;
+    } catch (err) {
+      logger.error({ err }, 'NoteModel.permanentDelete failed');
       throw err;
     }
   }
