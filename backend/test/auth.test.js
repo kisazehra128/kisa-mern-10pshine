@@ -6,13 +6,12 @@ const { pool } = require('../src/config/db');
 describe('Auth routes', () => {
   const testUser = {
     name: 'Test User',
-    email: `test${Date.now()}@example.com`, // unique each run so it doesn't collide
+    email: `test${Date.now()}@example.com`, 
     password: 'password123'
   };
 
   let token;
 
-  // clean up the test user after all tests run
   after(async () => {
     await pool.query('DELETE FROM users WHERE email = ?', [testUser.email]);
   });
@@ -53,7 +52,7 @@ describe('Auth routes', () => {
 
       expect(res.status).to.equal(200);
       expect(res.body).to.have.property('token');
-      token = res.body.token; // save for the protected route tests below
+      token = res.body.token; 
     });
 
     it('rejects a wrong password', async () => {
@@ -87,6 +86,28 @@ describe('Auth routes', () => {
       expect(res.status).to.equal(200);
       expect(res.body.user).to.have.property('email', testUser.email);
       expect(res.body.user).to.not.have.property('password');
+    });
+  });
+
+  describe('POST /api/auth/logout', () => {
+    it('rejects with no token', async () => {
+      const res = await request(app).post('/api/auth/logout');
+      expect(res.status).to.equal(401);
+    });
+
+    it('logs out with a valid token, and that same token is rejected afterward', async () => {
+      const logoutRes = await request(app)
+        .post('/api/auth/logout')
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(logoutRes.status).to.equal(200);
+      expect(logoutRes.body).to.have.property('message', 'logged out');
+
+      const meRes = await request(app)
+        .get('/api/users/me')
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(meRes.status).to.equal(401);
     });
   });
 });

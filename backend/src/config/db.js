@@ -1,5 +1,6 @@
 const mysql = require('mysql2/promise');
 require('dotenv').config();
+const logger = require('./logger');
 
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
@@ -13,17 +14,34 @@ const pool = mysql.createPool({
 });
 
 pool.on('error', (err) => {
-  console.error('Unexpected MySQL pool error:', err.message);
+  logger.error({ err }, 'Unexpected MySQL pool error');
 });
 
+async function ensureNoteTrashColumn(connection) {
+  const [rows] = await connection.query(
+    `SELECT COUNT(*) AS count
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE()
+       AND TABLE_NAME = 'notes'
+       AND COLUMN_NAME = 'deleted_at'`
+  );
+
+  if (!rows[0].count) {
+    await connection.query('ALTER TABLE notes ADD COLUMN deleted_at TIMESTAMP NULL DEFAULT NULL');
+  }
+}
+
 async function testConnection() {
+  let connection;
   try {
-    const connection = await pool.getConnection();
-    console.log('MySQL connected successfully');
-    connection.release();
+    connection = await pool.getConnection();
+    await ensureNoteTrashColumn(connection);
+    logger.info('MySQL connected successfully');
   } catch (err) {
-    console.error(' MySQL connection failed:', err.message);
+    logger.error({ err }, 'MySQL connection failed');
     throw err;
+  } finally {
+    connection?.release();
   }
 }
 

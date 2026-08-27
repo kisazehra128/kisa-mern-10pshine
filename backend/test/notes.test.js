@@ -18,7 +18,7 @@ describe('Notes routes', () => {
 
   let tokenA;
   let tokenB;
-  let noteId; // a note belonging to userA
+  let noteId;  
 
   before(async () => {
     await request(app).post('/api/auth/register').send(userA);
@@ -37,7 +37,6 @@ describe('Notes routes', () => {
 
   after(async () => {
     await pool.query('DELETE FROM users WHERE email IN (?, ?)', [userA.email, userB.email]);
-    // notes get deleted automatically - foreign key is ON DELETE CASCADE
   });
 
   describe('POST /api/notes', () => {
@@ -64,6 +63,16 @@ describe('Notes routes', () => {
         .send({ content: 'no title here' });
 
       expect(res.status).to.equal(400);
+    });
+
+    it('creates a note with a category', async () => {
+      const res = await request(app)
+        .post('/api/notes')
+        .set('Authorization', `Bearer ${tokenA}`)
+        .send({ title: 'Grocery run', content: 'milk, eggs', category: 'grocery' });
+
+      expect(res.status).to.equal(201);
+      expect(res.body.note).to.have.property('category', 'grocery');
     });
   });
 
@@ -108,6 +117,21 @@ describe('Notes routes', () => {
 
       expect(res.status).to.equal(200);
       expect(res.body.notes.find(n => n.id === noteId)).to.be.undefined;
+    });
+
+    it('filters notes with ?category=', async () => {
+      await request(app)
+        .post('/api/notes')
+        .set('Authorization', `Bearer ${tokenA}`)
+        .send({ title: 'Study note', content: 'exam prep', category: 'study' });
+
+      const res = await request(app)
+        .get('/api/notes?category=study')
+        .set('Authorization', `Bearer ${tokenA}`);
+
+      expect(res.status).to.equal(200);
+      expect(res.body.notes.length).to.be.at.least(1);
+      expect(res.body.notes.every(n => n.category === 'study')).to.be.true;
     });
   });
 
@@ -156,7 +180,6 @@ describe('Notes routes', () => {
 
       expect(res.status).to.equal(200);
 
-      // confirm it actually persisted, not just that the endpoint said "ok"
       const check = await request(app)
         .get(`/api/notes/${noteId}`)
         .set('Authorization', `Bearer ${tokenA}`);
@@ -175,7 +198,44 @@ describe('Notes routes', () => {
       expect(res.status).to.equal(404);
     });
 
-    it('deletes a note as its owner', async () => {
+    it('moves a note to trash as its owner', async () => {
+      const res = await request(app)
+        .delete(`/api/notes/${noteId}`)
+        .set('Authorization', `Bearer ${tokenA}`);
+
+      expect(res.status).to.equal(200);
+
+      const active = await request(app)
+        .get(`/api/notes/${noteId}`)
+        .set('Authorization', `Bearer ${tokenA}`);
+
+      expect(active.status).to.equal(404);
+    });
+
+    it('shows the deleted note in trash', async () => {
+      const res = await request(app)
+        .get('/api/notes/trash')
+        .set('Authorization', `Bearer ${tokenA}`);
+
+      expect(res.status).to.equal(200);
+      expect(res.body.notes.some(n => n.id === noteId)).to.be.true;
+    });
+
+    it('restores a note from trash', async () => {
+      const res = await request(app)
+        .patch(`/api/notes/${noteId}/restore`)
+        .set('Authorization', `Bearer ${tokenA}`);
+
+      expect(res.status).to.equal(200);
+
+      const active = await request(app)
+        .get(`/api/notes/${noteId}`)
+        .set('Authorization', `Bearer ${tokenA}`);
+
+      expect(active.status).to.equal(200);
+    });
+
+    it('moves the note to trash again before permanent deletion', async () => {
       const res = await request(app)
         .delete(`/api/notes/${noteId}`)
         .set('Authorization', `Bearer ${tokenA}`);
@@ -183,9 +243,17 @@ describe('Notes routes', () => {
       expect(res.status).to.equal(200);
     });
 
-    it('returns 404 deleting it again', async () => {
+    it('permanently deletes a trashed note', async () => {
       const res = await request(app)
-        .delete(`/api/notes/${noteId}`)
+        .delete(`/api/notes/${noteId}/permanent`)
+        .set('Authorization', `Bearer ${tokenA}`);
+
+      expect(res.status).to.equal(200);
+    });
+
+    it('returns 404 when permanently deleting it again', async () => {
+      const res = await request(app)
+        .delete(`/api/notes/${noteId}/permanent`)
         .set('Authorization', `Bearer ${tokenA}`);
 
       expect(res.status).to.equal(404);

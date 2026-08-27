@@ -1,301 +1,94 @@
 # Notes App
 
-Backend foundation for a MERN Notes Application, built as part of the 10P Shine internship. This project is in early development.
-
-## Where things stand
-
-- Backend project set up
-- Basic Express server running
-- Basic routing done
-- Env config added, with a `.env.example` for reference
-- Backend tests added (Mocha, Chai, Supertest)
-- Updated `.gitignore` for dev files
-- CodeRabbit set up to auto review PRs on main/develop
-- MySQL hooked up
-- Schema created for users and notes tables
-- User and Note models done (talks to the DB directly)
-- User authentication done — register, login, JWT, protected routes
-- Notes CRUD done — create, read, update, delete, search, scoped per user
-- Postman collection added for manually testing all endpoints
+Full-stack notes app — Node/Express/MySQL backend, React frontend, JWT auth.
 
 ## Stack
 
+Node.js, Express, MySQL, JWT, Joi, Pino · React (Vite), React Router, Axios, Tiptap
+Testing: Mocha, Chai, Supertest, Sinon
+
+## Features
+
+- Auth: register, login, logout, protected routes
+- Notes: create/edit, search, rich text editor with images (2MB max per image, hover an inserted image and click ✕ to remove it), soft delete, restore, permanent delete
+- Search: matches every word you type against a note's title and body, in any order, ignoring formatting debounced as you type
+- Categories: per-user, create/delete your own, filter notes by category, live counts in the sidebar
+- Trash: deleted notes stay in the sidebar until restored or permanently deleted
+- Dark mode, responsive layout, user profile
+- 106 backend tests
+
+## Setup
+
 **Backend**
-- Node.js
-- Express.js
-- MySQL
-
-**Auth**
-- bcrypt (password hashing)
-- jsonwebtoken (JWT)
-
-**Testing**
-- Mocha
-- Chai
-- Supertest
-- Postman (manual API testing)
-
-Frontend isn't in yet, will update this once it's added.
-
-## Getting it running
-
 ```bash
 cd backend
 npm install
-```
-
-## Environment Setup
-
-```bash
-cp .env.example .env
-```
-
-Fill in the values in `.env`, including a secure random string for `JWT_SECRET`.
-
-## Database Setup
-
-In `.env`, set `DB_NAME` to whatever you want your database to be called. Then create a database with that same name and apply the schema:
-
-```bash
+cp .env.example .env   # fill in DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, JWT_SECRET, FRONTEND_URL
 mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS notes_app;"
-mysql -u root -p notes_app < backend/database/schema.sql
-```
-*(replace `notes_app` in both commands with whatever you set `DB_NAME` to)*
-
-Alternatively, run `backend/database/schema.sql` in MySQL Workbench against a database named to match `DB_NAME`.
-
-## Running the server
-
-```bash
-npm run dev
+mysql -u root -p notes_app < database/schema.sql
 ```
 
-Runs on `http://localhost:5000` by default.
+> Already have a `notes_app` database from before? The `notes.content` column
+> used to be `TEXT` (~64KB max), which silently truncated/rejected saves once
+> a note had an embedded image. Run the one-time migration to widen it:
+> ```bash
+> mysql -u root -p notes_app < database/migrate_content_longtext.sql
+> ```
 
-Run tests with:
+**Frontend**
+```bash
+cd frontend
+npm install
+cp .env.example .env   # VITE_API_URL, defaults to http://localhost:5000
+```
+
+## Running
+
+Backend and frontend each need their own terminal, running at the same time.
 
 ```bash
+# terminal 1 — backend
+cd backend
+npm run dev     # http://localhost:5000
+```
+
+```bash
+# terminal 2 — backend tests
+cd backend
 npm test
 ```
 
-## APIs so far
-
-| Method | Endpoint             | What it does                          | Auth required |
-| ------ | -------------------- | -------------------------------------- | -------------- |
-| GET    | `/`                   | Welcome message                        | No             |
-| GET    | `/api/health`         | Server health check                    | No             |
-| POST   | `/api/auth/register`  | Create a new user                      | No             |
-| POST   | `/api/auth/login`     | Log in, get back a JWT                 | No             |
-| GET    | `/api/users/me`       | Get the logged-in user's profile       | Yes            |
-| POST   | `/api/notes`          | Create a note                          | Yes            |
-| GET    | `/api/notes`          | Get all of the logged-in user's notes, supports `?search=` | Yes |
-| GET    | `/api/notes/:id`      | Get a single note                      | Yes            |
-| PUT    | `/api/notes/:id`      | Update a note                          | Yes            |
-| DELETE | `/api/notes/:id`      | Delete a note                          | Yes            |
-
-**GET /**
-```json
-{
-  "message": "Welcome to Notes API"
-}
+```bash
+# terminal 3 — frontend
+cd frontend
+npm run dev     # http://localhost:5173
 ```
 
-**GET /api/health**
-```json
-{
-  "success": true,
-  "message": "Backend is running."
-}
-```
+## API
 
-**POST /api/auth/register**
+All `/api/notes`, `/api/categories`, `/api/users/me` routes need `Authorization: Bearer <token>`.
 
-Body:
-```json
-{
-  "name": "Test User",
-  "email": "test@example.com",
-  "password": "password123"
-}
-```
+| Method | Endpoint | Body |
+| --- | --- | --- |
+| POST | `/api/auth/register` | `{ name, email, password }` |
+| POST | `/api/auth/login` | `{ email, password }` → `token` |
+| POST | `/api/auth/logout` | — |
+| GET | `/api/users/me` | — |
+| POST | `/api/notes` | `{ title, content, category }` |
+| GET | `/api/notes` | `?search=` `?category=` |
+| GET / PUT / DELETE | `/api/notes/:id` | `{ title, content, category }` (PUT); DELETE moves the note to trash |
+| GET | `/api/notes/trash` | → trashed notes |
+| PATCH | `/api/notes/:id/restore` | — |
+| DELETE | `/api/notes/:id/permanent` | — |
+| GET | `/api/categories` | → `{ total, categories: [{id, name, slug, icon, count}] }` |
+| POST | `/api/categories` | `{ name, icon }` |
+| DELETE | `/api/categories/:id` | — |
 
-Response:
-```json
-{
-  "message": "user registered",
-  "user": {
-    "id": 1,
-    "name": "Test User",
-    "email": "test@example.com"
-  }
-}
-```
+A note's `category` is the matching category's `slug`. Deleting a category doesn't delete its notes — they just lose the tag.
 
-Status codes: `201` success · `409` email already registered · `400` missing fields
-
-**POST /api/auth/login**
-
-Body:
-```json
-{
-  "email": "test@example.com",
-  "password": "password123"
-}
-```
-
-Response:
-```json
-{
-  "message": "logged in",
-  "token": "eyJhbGciOi...",
-  "user": {
-    "id": 1,
-    "name": "Test User",
-    "email": "test@example.com"
-  }
-}
-```
-
-Status codes: `200` success · `401` wrong email or password
-
-**GET /api/users/me**
-
-Requires an `Authorization: Bearer <token>` header, using the token from login.
-
-Response:
-```json
-{
-  "user": {
-    "id": 1,
-    "name": "Test User",
-    "email": "test@example.com",
-    "created_at": "2026-07-28T12:00:00.000Z"
-  }
-}
-```
-
-Status codes: `200` success · `401` missing, invalid, or expired token
-
-**POST /api/notes**
-
-Requires `Authorization: Bearer <token>`.
-
-Body:
-```json
-{
-  "title": "My first note",
-  "content": "some content"
-}
-```
-
-Response:
-```json
-{
-  "message": "note created",
-  "note": {
-    "id": 1,
-    "user_id": 1,
-    "title": "My first note",
-    "content": "some content"
-  }
-}
-```
-
-Status codes: `201` success · `400` missing title · `401` missing/invalid token
-
-**GET /api/notes**
-
-Requires `Authorization: Bearer <token>`. Only returns notes belonging to the logged-in user.
-
-Optional query: `?search=keyword` — filters by title or content.
-
-Response:
-```json
-{
-  "notes": [
-    {
-      "id": 1,
-      "user_id": 1,
-      "title": "My first note",
-      "content": "some content",
-      "created_at": "2026-07-28T12:00:00.000Z",
-      "updated_at": "2026-07-28T12:00:00.000Z"
-    }
-  ]
-}
-```
-
-Status codes: `200` success · `400` search must be a single value · `401` missing/invalid token
-
-**GET /api/notes/:id**
-
-Requires `Authorization: Bearer <token>`. Only works if the note belongs to the logged-in user.
-
-Response:
-```json
-{
-  "note": {
-    "id": 1,
-    "user_id": 1,
-    "title": "My first note",
-    "content": "some content",
-    "created_at": "2026-07-28T12:00:00.000Z",
-    "updated_at": "2026-07-28T12:00:00.000Z"
-  }
-}
-```
-
-Status codes: `200` success · `404` not found, or not yours · `401` missing/invalid token
-
-**PUT /api/notes/:id**
-
-Requires `Authorization: Bearer <token>`. Only works if the note belongs to the logged-in user.
-
-Body:
-```json
-{
-  "title": "Updated title",
-  "content": "updated content"
-}
-```
-
-Response:
-```json
-{
-  "message": "note updated"
-}
-```
-
-Status codes: `200` success · `400` missing title · `404` not found, or not yours · `401` missing/invalid token
-
-**DELETE /api/notes/:id**
-
-Requires `Authorization: Bearer <token>`. Only works if the note belongs to the logged-in user.
-
-Response:
-```json
-{
-  "message": "note deleted"
-}
-```
-
-Status codes: `200` success · `404` not found, or not yours · `401` missing/invalid token
-
-## Testing the API manually (Postman)
-
-All endpoints above were manually verified with Postman against the running local server, alongside the automated Mocha/Chai/Supertest suite.
-
-Collection and environment files are in `postman/`:
-- `Notes-App.postman_collection.json` — one request per endpoint
-- `Notes-App-Local.postman_environment.json` — sets `baseUrl` to `http://localhost:5000`
-
-To use them:
-1. Import both files into Postman (`File > Import`)
-2. Select `Notes App - Local` from the environment dropdown
-3. Start the server with `npm run dev`
-4. Run the requests in order: Welcome → Health Check → Register → Login → Get Current User → notes endpoints
+Full request/response examples: Postman collection in `backend/postman/`.
 
 ## What's next
 
-- Backend logging and testing
-- Frontend
+PR #9 — `feature/sonarqube-integration`
+ -SonarQube integration
