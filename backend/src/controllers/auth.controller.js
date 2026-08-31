@@ -19,7 +19,7 @@ const register = asyncHandler(async (req, res) => {
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
- const connection = await pool.getConnection();
+  const connection = await pool.getConnection();
   let newUser;
   try {
     await connection.beginTransaction();
