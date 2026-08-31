@@ -5,7 +5,7 @@ Full-stack notes app — Node/Express/MySQL backend, React frontend, JWT auth.
 ## Stack
 
 Node.js, Express, MySQL, JWT, Joi, Pino · React (Vite), React Router, Axios, Tiptap
-Testing: Mocha, Chai, Supertest, Sinon
+Testing: Mocha, Chai, Supertest, Sinon (backend) · Jest, React Testing Library (frontend)
 
 ## Features
 
@@ -15,7 +15,7 @@ Testing: Mocha, Chai, Supertest, Sinon
 - Categories: per-user, create/delete your own, filter notes by category, live counts in the sidebar
 - Trash: deleted notes stay in the sidebar until restored or permanently deleted
 - Dark mode, responsive layout, user profile
-- 106 backend tests
+- 106 backend tests, frontend component tests with Jest + React Testing Library
 
 ## Setup
 
@@ -64,6 +64,32 @@ cd frontend
 npm run dev     # http://localhost:5173
 ```
 
+```bash
+# terminal 4 — frontend tests
+cd frontend
+npm test
+```
+
+## Code Quality
+
+Static analysis via [SonarQube](https://www.sonarsource.com/products/sonarqube/) Community Build, run locally.
+
+**Quality Gate: ✅ Passed**
+
+- Reliability, Maintainability, and Security ratings tracked on every scan
+- Regex backtracking risks removed, accessibility issues fixed (button semantics, keyboard support), and redundant string operations cleaned up across the frontend and backend
+- Frontend test coverage can now be generated with `npm test -- --coverage` (from `frontend/`) and fed into SonarQube via `sonar.javascript.lcov.reportPaths` in `sonar-project.properties`; the Coverage condition can be re-added to the Quality Gate once that's wired in consistently
+
+**Running the scan locally:**
+```bash
+# 1. Start SonarQube (if running via Docker)
+docker start sonarqube   # or: docker run -d --name sonarqube -p 9000:9000 sonarqube:latest
+
+# 2. From the project root, run the scanner
+sonar-scanner -D"sonar.host.url=http://localhost:9000" -D"sonar.token=YOUR_TOKEN"
+```
+Generate a token from SonarQube under **My Account → Security → Generate Token**. Analysis config lives in `sonar-project.properties`.
+
 ## API
 
 All `/api/notes`, `/api/categories`, `/api/users/me` routes need `Authorization: Bearer <token>`.
@@ -87,8 +113,3 @@ All `/api/notes`, `/api/categories`, `/api/users/me` routes need `Authorization:
 A note's `category` is the matching category's `slug`. Deleting a category doesn't delete its notes — they just lose the tag.
 
 Full request/response examples: Postman collection in `backend/postman/`.
-
-## What's next
-
-PR #9 — `feature/sonarqube-integration`
- -SonarQube integration
