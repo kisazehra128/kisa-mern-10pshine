@@ -47,7 +47,7 @@ function buildHtmlExport(notes, categories) {
         ? `<div class="note-category">${escapeHtml(categoryName)}</div>`
         : '';
 
-      const content = note.content || '<p></p>';
+      const content = DOMPurify.sanitize(note.content || '<p></p>', SANITIZE_CONFIG);
 
       return `
         <article class="note">

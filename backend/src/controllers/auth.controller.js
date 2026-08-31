@@ -52,16 +52,31 @@ const register = asyncHandler(async (req, res) => {
 const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
-  const user = await userModel.findByEmail(email);
+  let user;
+  try {
+    user = await userModel.findByEmail(email);
+  } catch (err) {
+    logger.error({ err }, 'failed to look up user during login');
+    throw err;
+  }
+
   if (!user) {
     throw new AppError('invalid email or password', 401);
   }
 
-  const passwordMatches = await bcrypt.compare(password, user.password);
+  let passwordMatches;
+  try {
+    passwordMatches = await bcrypt.compare(password, user.password);
+  } catch (err) {
+    logger.error({ err, userId: user.id }, 'failed to compare password during login');
+    throw err;
+  }
+
   if (!passwordMatches) {
     throw new AppError('invalid email or password', 401);
   }
-const token = jwt.sign(
+
+  const token = jwt.sign(
     { userId: user.id },
     process.env.JWT_SECRET,
     { expiresIn: '1h', jwtid: crypto.randomUUID() }
@@ -75,16 +90,22 @@ const token = jwt.sign(
     user: { id: user.id, name: user.name, email: user.email },
   });
 });
+
 const logout = asyncHandler(async (req, res) => {
-  const authHeader = req.headers.authorization;
-  const token = authHeader.split(' ')[1];
-  const decoded = jwt.decode(token);
+  try {
+    const authHeader = req.headers.authorization;
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.decode(token);
 
-  tokenBlacklist.add(token, decoded && decoded.exp);
+    tokenBlacklist.add(token, decoded && decoded.exp);
 
-  logger.info({ userId: req.user.userId }, 'user logged out');
+    logger.info({ userId: req.user.userId }, 'user logged out');
 
-  res.status(200).json({ message: 'logged out' });
+    res.status(200).json({ message: 'logged out' });
+  } catch (err) {
+    logger.error({ err, userId: req.user?.userId }, 'failed to log out user');
+    throw err;
+  }
 });
 
 module.exports = { register, login, logout };

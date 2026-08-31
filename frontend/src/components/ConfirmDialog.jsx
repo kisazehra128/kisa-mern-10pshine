@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useId, useRef } from 'react';
 import { createPortal } from 'react-dom';
 
 export default function ConfirmDialog({
@@ -11,6 +11,7 @@ export default function ConfirmDialog({
   error,
 }) {
   const cancelRef = useRef(null);
+  const titleId = useId();
 
   useEffect(() => {
     cancelRef.current?.focus();
@@ -34,11 +35,11 @@ export default function ConfirmDialog({
         className="confirm-modal"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="confirm-dialog-title"
+        aria-labelledby={titleId}
       >
         <h3
           className="confirm-title"
-          id="confirm-dialog-title"
+          id={titleId}
         >
           {title}
         </h3>

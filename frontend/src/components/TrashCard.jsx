@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { memo, useMemo, useState } from 'react';
 import ConfirmDialog from './ConfirmDialog';
 import { htmlToPreviewText } from '../utils/html';
 
@@ -7,10 +7,10 @@ function formatDate(value) {
   return new Date(value).toLocaleDateString();
 }
 
-export default function TrashCard({ note, index = 0, onRestore, onPermanentDelete }) {
+function TrashCard({ note, index = 0, onRestore, onPermanentDelete }) {
   const [busy, setBusy] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
-  const preview = htmlToPreviewText(note.content);
+  const preview = useMemo(() => htmlToPreviewText(note.content), [note.content]);
 
   const handleRestore = async () => {
     setBusy(true);
@@ -57,3 +57,5 @@ export default function TrashCard({ note, index = 0, onRestore, onPermanentDelet
     </article>
   );
 }
+
+export default memo(TrashCard);

@@ -49,7 +49,7 @@ export default function Login() {
         <h1 className="auth-title">Welcome to your NotePad!</h1>
         <p className="auth-subtitle">Enter your details to access your notes.</p>
 
-        {error && <div className="error-banner">{error}</div>}
+        {error && <div className="error-banner" role="alert">{error}</div>}
 
         <form onSubmit={handleSubmit}>
           <div className="field">

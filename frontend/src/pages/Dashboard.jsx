@@ -88,18 +88,27 @@ export default function Dashboard() {
   }, []);
 
   const createCategory = async (name, icon) => {
-    await client.post('/api/categories', { name, icon });
-    fetchCategories();
+    try {
+      await client.post('/api/categories', { name, icon });
+      await fetchCategories();
+    } catch (err) {
+      // Re-throw so Sidebar's own catch can show the error and keep the form open.
+      throw err;
+    }
   };
 
   const deleteCategory = async (id) => {
     const deletedSlug = categories.find((c) => c.id === id)?.slug;
-    await client.delete(`/api/categories/${id}`);
-    await fetchCategories();
-    if (category && category === deletedSlug) {
-      setCategory(null);
-    } else if (view === 'notes') {
-      fetchNotes(search, category, undefined);
+    try {
+      await client.delete(`/api/categories/${id}`);
+      await fetchCategories();
+      if (category && category === deletedSlug) {
+        setCategory(null);
+      } else if (view === 'notes') {
+        fetchNotes(search, category, undefined);
+      }
+    } catch (err) {
+      setToast(err.response?.data?.message || 'Could not delete the category.');
     }
   };
 

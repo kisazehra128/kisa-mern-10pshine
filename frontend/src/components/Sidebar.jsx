@@ -223,6 +223,7 @@ export default function Sidebar({
               >
                 <input
                   type="text"
+                  aria-label="Category name"
                   placeholder="Category name"
                   value={name}
                   onChange={(e) =>

@@ -78,15 +78,18 @@ Static analysis via [SonarQube](https://www.sonarsource.com/products/sonarqube/)
 
 - Reliability, Maintainability, and Security ratings tracked on every scan
 - Regex backtracking risks removed, accessibility issues fixed (button semantics, keyboard support), and redundant string operations cleaned up across the frontend and backend
-- Frontend test coverage can now be generated with `npm test -- --coverage` (from `frontend/`) and fed into SonarQube via `sonar.javascript.lcov.reportPaths` in `sonar-project.properties`; the Coverage condition can be re-added to the Quality Gate once that's wired in consistently
+- Frontend test coverage can now be generated with `npm test -- --coverage` (from `frontend/`); coverage import into SonarQube is **not yet configured** in `sonar-project.properties` (no `sonar.javascript.lcov.reportPaths` set), so the Coverage condition stays out of the Quality Gate until that's wired in
 
 **Running the scan locally:**
 ```bash
 # 1. Start SonarQube (if running via Docker)
 docker start sonarqube   # or: docker run -d --name sonarqube -p 9000:9000 sonarqube:latest
 
-# 2. From the project root, run the scanner
-sonar-scanner -D"sonar.host.url=http://localhost:9000" -D"sonar.token=YOUR_TOKEN"
+# 2. Set your token as an environment variable (avoids leaking it via shell history / process list)
+export SONAR_TOKEN=your_token_here
+
+# 3. From the project root, run the scanner
+sonar-scanner -D"sonar.host.url=http://localhost:9000"
 ```
 Generate a token from SonarQube under **My Account → Security → Generate Token**. Analysis config lives in `sonar-project.properties`.
 

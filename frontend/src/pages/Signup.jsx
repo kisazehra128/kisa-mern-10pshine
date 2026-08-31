@@ -53,7 +53,7 @@ export default function Signup() {
         <h1 className="auth-title">Create an account</h1>
         <p className="auth-subtitle">Every note brings you one step closer.</p>
 
-        {error && <div className="error-banner">{error}</div>}
+        {error && <div className="error-banner" role="alert">{error}</div>}
 
         <form onSubmit={handleSubmit}>
           <div className="field">

@@ -1,3 +1,4 @@
+import { memo, useMemo } from 'react';
 import { htmlToPreviewText } from '../utils/html';
 
 const DECORATIONS = ['pin-red', 'tape-check', 'pin-green', 'clip'];
@@ -11,9 +12,9 @@ function formatDate(iso) {
   });
 }
 
-export default function NoteCard({ note, category, index = 0, onClick }) {
+function NoteCard({ note, category, index = 0, onClick }) {
   const deco = DECORATIONS[index % DECORATIONS.length];
-  const preview = htmlToPreviewText(note.content,220);
+  const preview = useMemo(() => htmlToPreviewText(note.content, 220), [note.content]);
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' || e.key === ' ') {
@@ -47,5 +48,7 @@ export default function NoteCard({ note, category, index = 0, onClick }) {
     </div>
   );
 }
+
+export default memo(NoteCard);
 
 
