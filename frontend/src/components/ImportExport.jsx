@@ -23,11 +23,11 @@ function downloadBlob(filename, content, type) {
 
 function escapeHtml(value) {
   return String(value ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
 }
 
 function makeFilename(count) {
@@ -510,13 +510,9 @@ export default function ImportExport({
       {exportOpen && (
         <div
           className="export-modal-backdrop"
-          onClick={closeExport}
         >
           <div
             className="export-modal"
-            onClick={(event) =>
-              event.stopPropagation()
-            }
           >
             <div className="export-modal-header">
               <div>

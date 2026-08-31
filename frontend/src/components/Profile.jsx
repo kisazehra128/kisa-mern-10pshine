@@ -41,11 +41,11 @@ export default function Profile({ onClose }) {
   const initial = profile?.name?.trim()?.[0]?.toUpperCase() || '?';
 
   return (
-    <div className="editor-overlay" onClick={onClose}>
-      <div className="profile-modal" onClick={(e) => e.stopPropagation()}>
+    <div className="editor-overlay">
+      <div className="profile-modal">
         <div className="editor-header">
           <strong>Your Profile</strong>
-          <button className="editor-close" onClick={onClose} aria-label="Close profile">
+          <button type="button" className="editor-close" onClick={onClose} aria-label="Close profile">
             ✕
           </button>
         </div>

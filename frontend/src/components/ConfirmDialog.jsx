@@ -29,22 +29,12 @@ export default function ConfirmDialog({
   }, [onCancel, busy]);
 
   const dialog = (
-    <div
-      className="confirm-overlay"
-      onClick={(e) => {
-        e.stopPropagation();
-
-        if (!busy) {
-          onCancel?.();
-        }
-      }}
-    >
+    <div className="confirm-overlay">
       <div
         className="confirm-modal"
         role="dialog"
         aria-modal="true"
         aria-labelledby="confirm-dialog-title"
-        onClick={(e) => e.stopPropagation()}
       >
         <h3
           className="confirm-title"

@@ -1,0 +1,6 @@
+projectKey=kisa-mern-10pshine
+serverUrl=http://localhost:9000
+serverVersion=26.8.0.126808
+dashboardUrl=http://localhost:9000/dashboard?id=kisa-mern-10pshine
+ceTaskId=4904b641-8385-478e-86c5-5f25855caa34
+ceTaskUrl=http://localhost:9000/api/ce/task?id=4904b641-8385-478e-86c5-5f25855caa34

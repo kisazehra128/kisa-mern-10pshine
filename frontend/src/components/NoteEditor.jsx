@@ -204,8 +204,8 @@ export default function NoteEditor({
   };
 
   return (
-    <div className="editor-overlay" onClick={onClose}>
-      <div className="editor-modal" onClick={(e) => e.stopPropagation()}>
+    <div className="editor-overlay">
+      <div className="editor-modal">
         <div className="editor-header">
           <input
             className="editor-title-input"
@@ -230,7 +230,7 @@ export default function NoteEditor({
             ))}
           </select>
 
-          <button className="editor-close" onClick={onClose} aria-label="Close editor">
+          <button type="button" className="editor-close" onClick={onClose} aria-label="Close editor">
             ✕
           </button>
         </div>

@@ -10,6 +10,7 @@ export default function LoggedOut() {
   return (
     <div className="auth-page">
       <button
+        type="button"
         className="btn btn-ghost theme-toggle-corner"
         onClick={toggleTheme}
         aria-label="Toggle dark mode"

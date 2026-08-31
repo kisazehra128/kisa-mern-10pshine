@@ -110,7 +110,7 @@ export default function Sidebar({
             width="18"
             height="15"
             alt=""
-          />
+          />{' '}
           All Notes
         </span>
 

@@ -30,7 +30,20 @@ const createNote = asyncHandler(async (req, res) => {
 });
 
 function stripHtml(html) {
-  return (html || '').replace(/<[^>]*>/g, ' ');
+  if (!html) return '';
+  let result = '';
+  let inTag = false;
+  for (const ch of html) {
+    if (ch === '<') {
+      inTag = true;
+    } else if (ch === '>') {
+      inTag = false;
+      result += ' ';
+    } else if (!inTag) {
+      result += ch;
+    }
+  }
+  return result;
 }
 
 const getNotes = asyncHandler(async (req, res) => {
