@@ -31,7 +31,6 @@ async function ensureNoteTrashColumn(connection) {
       try {
         await connection.query('ALTER TABLE notes ADD COLUMN deleted_at TIMESTAMP NULL DEFAULT NULL');
       } catch (err) {
-        // Another instance may have added the column between our check and this ALTER.
         if (err.code !== 'ER_DUP_FIELDNAME') throw err;
       }
     }

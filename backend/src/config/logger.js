@@ -1,10 +1,6 @@
 const pino = require('pino');
 
 const isDev = process.env.NODE_ENV !== 'production';
-
-// pretty-printed, colorized logs in dev; plain JSON in production
-// (JSON is what you actually want once logs are going to a real log
-// aggregator instead of a terminal)
 const logger = pino(
   isDev
     ? {

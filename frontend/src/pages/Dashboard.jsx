@@ -92,7 +92,6 @@ export default function Dashboard() {
       await client.post('/api/categories', { name, icon });
       await fetchCategories();
     } catch (err) {
-      // Re-throw so Sidebar's own catch can show the error and keep the form open.
       throw err;
     }
   };

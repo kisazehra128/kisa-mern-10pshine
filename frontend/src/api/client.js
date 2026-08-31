@@ -6,7 +6,6 @@ const client = axios.create({
   baseURL: API_URL,
 });
 
-// attach token to every request if we have one
 client.interceptors.request.use((config) => {
   const token = localStorage.getItem('notepad_token');
   if (token) {
@@ -15,7 +14,6 @@ client.interceptors.request.use((config) => {
   return config;
 });
 
-// clear stored auth on 401, ProtectedRoute handles the redirect
 client.interceptors.response.use(
   (response) => response,
   (error) => {
